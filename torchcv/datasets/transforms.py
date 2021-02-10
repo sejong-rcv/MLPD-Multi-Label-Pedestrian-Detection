@@ -31,7 +31,7 @@ else:
 
 
 __all__ = ["SynthFail","FaultTolerant","TT_FaultTolerant","UnNormalize", "Compose", "ToTensor", "ToPILImage", "Normalize", "Resize", 
-           "Lambda", "RandomHorizontalFlip", "TT_RandomHorizontalFlip",  "RandomResizedCrop", "TT_RandomResizedCrop", "ColorJitter",
+           "Lambda", "RandomHorizontalFlip", "TT_RandomHorizontalFlip", "TT_FixedHorizontalFlip",  "RandomResizedCrop", "TT_RandomResizedCrop", "ColorJitter",
            "ColorJitterLWIR", "Stretch"]
 
 _pil_interpolation_to_str = {
@@ -61,7 +61,7 @@ class Compose(object):
 
     def __call__(self, img, mask=None, vis_box=None, lwir_box=None, pair=None):
 
-        if pair is None : 
+        if pair is None :
             for t in self.transforms:                    
                 img, mask, vis_box, lwir_box = t(img, mask, vis_box, lwir_box)
             return img, mask, vis_box, lwir_box
@@ -129,18 +129,18 @@ class SynthFail(object):
 
         
 
-    def __call__(self, vis, lwir, box=None):
+    def __call__(self, vis, lwir, box_vis=None, box_lwir=None):
         """
         Args:
             tensor (Tensor): Tensor image of size (C, H, W) to be normalized.
         Returns:
             Tensor: Normalized Tensor image.
         """
-                
+        
         vis = self.func_R(vis, self.fail_mask_R)
         lwir = self.func_T(lwir, self.fail_mask_T)
 
-        return vis, lwir, box
+        return vis, lwir, box_vis, box_lwir
 
     def __repr__(self):        
         return self.__class__.__name__ + '(mask for RGB={0}, mask for T={1})'.format(self.masks[0], self.masks[1])
@@ -691,13 +691,51 @@ class TT_RandomHorizontalFlip(object):
                     box_lwir = F.box_flip(box_lwir)
                 
                 pair = 1
-        else :
-            pair = 1
 
         return img, ann, box_vis, box_lwir, pair                    
 
     def __repr__(self):
         return self.__class__.__name__ + '(p={})'.format(self.p)
+    
+class TT_FixedHorizontalFlip(object):
+    """Horizontally flip the given PIL Image randomly with a given probability.
+    Args:
+        p (float): probability of the image being flipped. Default value is 0.5
+    """
+
+    def __init__(self, p=0.5, flip=0.3):
+        self.p = p
+        self.flip = flip
+
+    def __call__(self, img, ann=None, box_vis=None, box_lwir=None, pair=None):
+        """
+        Args:
+            img (PIL Image): Image to be flipped.
+        Returns:
+            PIL Image: Randomly flipped image.
+        """
+        
+        if random.random() < self.p:
+            img = F.hflip(img)
+
+            if box_vis is not None:
+                box_vis = F.box_flip(box_vis)
+            
+            pair = 0
+
+        else :
+            ann = F.hflip(ann) if ann is not None else None
+
+            if box_lwir is not None:
+                box_lwir = F.box_flip(box_lwir)
+
+            pair = 0
+
+        return img, ann, box_vis, box_lwir, pair                    
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(p={})'.format(self.p)
+
 
 class RandomVerticalFlip(object):
     """Vertically flip the given PIL Image randomly with a given probability.
@@ -904,9 +942,6 @@ class TT_RandomResizedCrop(object):
                 box_lwir = F.box_resized_crop(box_lwir, i_lwir/width, j_lwir/height, height/h_lwir, width/w_lwir) if box_lwir is not None else None   
 
             pair = 0
-
-        else : 
-            pair = 1
 
         return img, mask, box_vis, box_lwir, pair
 
