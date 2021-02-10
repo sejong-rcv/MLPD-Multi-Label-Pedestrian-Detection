@@ -12,7 +12,7 @@ for filename in sorted(glob.glob('./Detection_visualization/*.jpg')):
     print(filename)
  
  
-out = cv2.VideoWriter('test.avi',cv2.VideoWriter_fourcc(*'DIVX'), 20, size)
+out = cv2.VideoWriter('test_bg.avi',cv2.VideoWriter_fourcc(*'DIVX'), 5, size)
  
 for i in range(len(img_array)):
     out.write(img_array[i])

@@ -73,7 +73,8 @@ n_classes = 3  # number of different types of objects
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Learning parameters
-checkpoint = './jobs/2021-01-28_07h54m_SSD_KAIST_LF_Multi_Label/checkpoint_ssd300.pth.tar003'
+# checkpoint = './jobs/2021-01-28_07h54m_SSD_KAIST_LF_Multi_Label/checkpoint_ssd300.pth.tar003'
+checkpoint = None
 batch_size = 8 # batch size
 start_epoch = 0  # start at this epoch
 epochs = 40  # number of epochs to run without early-stopping
@@ -101,6 +102,7 @@ parser.add_argument('--exp_time',   default=None, type=str,  help='set if you wa
 parser.add_argument('--exp_name',   default=None, type=str,  help='set if you want to use exp name')
 parser.add_argument('--annotation',   default='AR-CNN', type=str,  help='set if you want to use annotation, defalut is Original(KAIST)')
 # AR-CNN, Sanitize, Original 
+
 args = parser.parse_args()
 
 def main():
@@ -385,24 +387,21 @@ def evaluate_coco(test_loader, model,epoch,jobs_dir, writer):
             predicted_locs, predicted_scores = model(image_vis, image_lwir)
             
             # Detect objects in SSD output
-            det_boxes_batch, det_labels_batch, det_scores_batch = model.detect_objects(predicted_locs, predicted_scores,
+            det_boxes_batch, det_labels_batch, det_scores_batch, _ = model.detect_objects(predicted_locs, predicted_scores,
                                                                                        min_score=0.1, max_overlap=0.425,
                                                                                        top_k=200)
-            # Evaluation MUST be at min_score=0.01, max_overlap=0.45, top_k=200 for fair comparision with the paper's results and other repos
-
-            
+            # Evaluation MUST be at min_score=0.01, max_overlap=0.45, top_k=200 for fair comparision with the paper's results and other repos      
             
             for box_t, label_t, score_t, ids in zip(det_boxes_batch ,det_labels_batch, det_scores_batch, index):
                 for box, label, score in zip(box_t, label_t, score_t) :
 
                     bb = box.cpu().numpy().tolist()
-
-                    # if score.item() > 0.1 :
+                    
                     results.append( {\
                                     'image_id': ids.item(), \
                                     'category_id': label.item(), \
                                     'bbox': [bb[0]*input_size[1], bb[1]*input_size[0], (bb[2]-bb[0])*input_size[1], (bb[3]-bb[1])*input_size[0]], \
-                                    'score': score.max().item()} )
+                                    'score': score.mean().item()} )
 
     rstFile = os.path.join(jobs_dir, './COCO_TEST_det_{:d}.json'.format(epoch))            
     write_result_coco(results, rstFile)

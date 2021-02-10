@@ -6,6 +6,7 @@ from tqdm import tqdm
 from pprint import PrettyPrinter
 import argparse
 
+import time
 import torch
 import torch.utils.data as data
 import json
@@ -35,6 +36,7 @@ from torchcv.evaluations.eval_MR_multisetup import COCOeval
 
 parser = argparse.ArgumentParser(description='PyTorch SSD Training')
 parser.add_argument('--synth_fail',         default=['None', 'None'], nargs='+', type=str, help='Specify synthetic failure: e.g. crack1.jpg None')
+parser.add_argument('--epoch',  default=4, type=int)
 
 annType = 'bbox'
 
@@ -47,14 +49,19 @@ data_folder = './datasets/kaist-rgbt/'
 batch_size = 1
 workers = 1
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-checkpoint = './jobs/2021-01-16_02h28m_SSD_KAIST_LF_FLIP_addrandomresizecrop/checkpoint_ssd300.pth.tar027'
 
-checkpoint_name = 'LF_05_'
-checkpoint_root = './result'
+args = parser.parse_args()
+
+# checkpoint = './jobs/2021-01-31_06h51m_SSD_KAIST_Double_Head_ALL_Sanitized/checkpoint_ssd300.pth.tar{:03d}'.format(args.epoch)
+# checkpoint = './jobs/2021-01-31_09h07m_SSD_KAIST_Multi_Labe_MBNet_txt/checkpoint_ssd300.pth.tar{:03d}'.format(args.epoch)
+checkpoint = './jobs/2021-01-28_12h35m_SSD_KAIST_LF_Multi_Label_continue/checkpoint_ssd300.pth.tar{:03d}'.format(args.epoch)
+# checkpoint = './jobs/2021-01-28_13h24m_SSD_KAIST_Multi_Label_Sanitized/checkpoint_ssd300.pth.tar{:03d}'.format(args.epoch)
+
+checkpoint_name = 'LF_Multi_Label_AVG_AVG'
+checkpoint_root = './result_check'
 input_size = [512., 640.]
 ori_size = (512, 640)  
 
-args = parser.parse_args()
 
 if not args.synth_fail == ['None', 'None']:
     if(str(args.synth_fail[0])=='None') :
@@ -73,7 +80,9 @@ if not args.synth_fail == ['None', 'None']:
 
     checkpoint_name = checkpoint_name + str1 +'_'+ str2
 else :
-    checkpoint_name = checkpoint_name + "Base"
+    checkpoint_name = checkpoint_name + "_Base"
+
+checkpoint_name = checkpoint_name + "Epoch_{:03d}".format(args.epoch)
 
 # Load model checkpoint that is to be evaluated
 checkpoint = torch.load(checkpoint)
@@ -103,6 +112,9 @@ test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, s
                                             collate_fn=test_dataset.collate_fn, 
                                             pin_memory=True)      
 
+data_time = AverageMeter()
+
+
 def evaluate_coco(test_loader, model):
     """
     Evaluate.
@@ -131,31 +143,38 @@ def evaluate_coco(test_loader, model):
 
             image_vis = image_vis.to(device)
             image_lwir = image_lwir.to(device)
-
+            
+            start = time.time()
             # Forward prop.
             predicted_locs, predicted_scores = model(image_vis, image_lwir)
+            data_time.update(time.time() - start)
+            #print(data_time.val)
             
             # Detect objects in SSD output
-            det_boxes_batch, det_labels_batch, det_scores_batch = model.detect_objects(predicted_locs, predicted_scores,
-                                                                                       min_score=0.5, max_overlap=0.3,
+            det_boxes_batch, det_labels_batch, det_scores_batch, det_bg_scores_batch = model.detect_objects(predicted_locs, predicted_scores,
+                                                                                       min_score=0.1, max_overlap=0.425,
                                                                                        top_k=50)
             # Evaluation MUST be at min_score=0.01, max_overlap=0.45, top_k=200 for fair comparision with the paper's results and other repos
-
-            # Store this batch's results for mAP calculation
-            boxes = [b.to(device) for b in boxes]
-            labels = [l.to(device) for l in labels]
-
             
-            for box_t, label_t, score_t, ids in zip(det_boxes_batch ,det_labels_batch, det_scores_batch, index):
-                for box, label, score in zip(box_t, label_t, score_t) :
+            for box_t, label_t, score_t, bg_score_t, ids in zip(det_boxes_batch ,det_labels_batch, det_scores_batch, det_bg_scores_batch, index):
+                for box, label, score, bg_score in zip(box_t, label_t, score_t, bg_score_t) :
+                    
+                    score_max = score.max().item()
+                    bg_score = bg_score.item()
+                    
+                    #if bg_score  > score_max : 
+                    #    continue
+
                     bb = box.cpu().numpy().tolist()
 
-                    # if score.item() > 0.1 :
-                    results.append( {\
-                                    'image_id': ids.item(), \
-                                    'category_id': label.item(), \
-                                    'bbox': [bb[0]*input_size[1], bb[1]*input_size[0], (bb[2]-bb[0])*input_size[1], (bb[3]-bb[1])*input_size[0]], \
-                                    'score': score.item()} )
+                    try : 
+                        results.append( {\
+                                        'image_id': ids.item(), \
+                                        'category_id': label.item(), \
+                                        'bbox': [bb[0]*input_size[1], bb[1]*input_size[0], (bb[2]-bb[0])*input_size[1], (bb[3]-bb[1])*input_size[0]], \
+                                        'score': score.mean().item()} )
+                    except : 
+                        import pdb;pdb.set_trace()
                     
     rstFile = os.path.join(checkpoint_root, './COCO_TEST_det_{:s}.json'.format(checkpoint_name))            
     write_result_coco(results, rstFile)
@@ -176,10 +195,16 @@ def evaluate_coco(test_loader, model):
         cocoEval.draw_figure(ax_test, rstFile.replace('json', 'jpg'))        
         
         print('Recall: {:}'.format( 1-cocoEval.eval['yy'][0][-1] ) )
+        print('Time : ',data_time.avg)
 
     except:
         import torchcv.utils.trace_error
         print('[Error] cannot evaluate by cocoEval. ')
 
+        
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
 if __name__ == '__main__':
+
     evaluate_coco(test_loader, model)

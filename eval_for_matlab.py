@@ -36,6 +36,7 @@ from torchcv.evaluations.eval_MR_multisetup import COCOeval
 parser = argparse.ArgumentParser(description='PyTorch SSD Training')
 parser.add_argument('--synth_fail',         default=['None', 'None'], nargs='+', type=str, help='Specify synthetic failure: e.g. crack1.jpg None')
 parser.add_argument('--mode',         default='all', nargs='+', type=str, help='mode')
+parser.add_argument('--epoch',  default=4, type=int)
 
 annType = 'bbox'
 
@@ -45,21 +46,22 @@ cocoGt = COCO(JSON_GT_FILE)
 
 # Parameters
 data_folder = './datasets/kaist-rgbt/'
-folder_root = './LF_ALL_RRC/det'
+folder_root = './LF_Double/det'
 batch_size = 1
 workers = 4
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+args = parser.parse_args()
 
 ## AR-CNN Annotation (FLIP)
-checkpoint = './jobs/2021-01-16_02h28m_SSD_KAIST_LF_FLIP_addrandomresizecrop/checkpoint_ssd300.pth.tar027'
-anno_save = './LF_ALL_RRC'
+checkpoint = './jobs/2021-01-28_12h35m_SSD_KAIST_LF_Multi_Label_continue/checkpoint_ssd300.pth.tar{:03d}'.format(args.epoch)
+anno_save = './LF_Double'
 
 
 input_size = [512., 640.]
 ori_size = (512, 640)  
 
-args = parser.parse_args()
+
 test_mode = args.mode[0]
 
 
@@ -148,32 +150,25 @@ def evaluate_coco(test_loader, model):
             predicted_locs, predicted_scores = model(image_vis, image_lwir)
             
             # Detect objects in SSD output
-            det_boxes_batch, det_labels_batch, det_scores_batch = model.detect_objects(predicted_locs, predicted_scores,
+            det_boxes_batch, det_labels_batch, det_scores_batch, det_bg_scores_batch = model.detect_objects(predicted_locs, predicted_scores,
                                                                                        min_score=0.1, max_overlap=0.425,
-                                                                                       top_k=200)
+                                                                                       top_k=50)
             # Evaluation MUST be at min_score=0.01, max_overlap=0.45, top_k=200 for fair comparision with the paper's results and other repos
-
-            # Store this batch's results for mAP calculation
-            boxes = [b.to(device) for b in boxes]
-            labels = [l.to(device) for l in labels]
 
             for box_t, label_t, score_t, ids in zip(det_boxes_batch ,det_labels_batch, det_scores_batch, index):
         
                 frame_id = img_set_list[ids.item()]
-                # file_name = folder_root + '/' + frame_id[1][0] + '_' + frame_id[1][1] + '_' + frame_id[1][2] + '.txt'
-                # f = open(file_name, 'w')
+
 
                 for box, label, score in zip(box_t, label_t, score_t) :
+                    
                     bb = box.cpu().numpy().tolist()
+                    
                     bbox = [bb[0]*input_size[1], bb[1]*input_size[0], (bb[2])*input_size[1], (bb[3])*input_size[0]]
                     image_id = ids.item()
-                    category = 'person'
-                    score = score.item()
-                    # out_txt = category + ' ' + str(format(bbox[0],".4f")) + ' ' + str(format(bbox[1],".4f")) + ' ' + str(format(bbox[2],".4f")) + ' ' + str(format(bbox[3],".4f")) + ' ' + str(score) + '\n'
+                    score = score.mean().item()
                     out_txt = str(image_id+1) + ',' + str(format(bbox[0],".4f")) + ',' + str(format(bbox[1],".4f")) + ',' + str(format(bbox[2]-bbox[0],".4f")) + ',' + str(format(bbox[3]-bbox[1],".4f")) + ',' + str(format(score,".8f")) + '\n'
                     f.write(out_txt)
-
-                # f.close()
         
         f.close()
                     

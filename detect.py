@@ -8,7 +8,8 @@ import pdb
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load model checkpoint
-checkpoint = './jobs/2021-01-28_07h54m_SSD_KAIST_LF_Multi_Label/checkpoint_ssd300.pth.tar003'
+checkpoint = './jobs/2021-01-31_09h07m_SSD_KAIST_Multi_Labe_MBNet_txt/checkpoint_ssd300.pth.tar028'
+
 checkpoint = torch.load(checkpoint)
 start_epoch = checkpoint['epoch'] + 1
 print('\nLoaded checkpoint from epoch %d. \n' % (start_epoch))
@@ -57,7 +58,7 @@ def detect(original_image, original_lwir, min_score, max_overlap, top_k, suppres
     predicted_locs, predicted_scores = model(vis.unsqueeze(0),lwir.unsqueeze(0))
 
     # Detect objects in SSD output
-    det_boxes, det_labels, det_scores = model.detect_objects(predicted_locs, predicted_scores, min_score=min_score,
+    det_boxes, det_labels, det_scores, det_bg_scores = model.detect_objects(predicted_locs, predicted_scores, min_score=min_score,
                                                              max_overlap=max_overlap, top_k=top_k) 
 
     # Move detections to the CPU
@@ -107,23 +108,31 @@ def detect(original_image, original_lwir, min_score, max_overlap, top_k, suppres
         #     det_labels[i]])  # a fourth rectangle at an offset of 1 pixel to increase line thickness
 
         # Text
-        text_score_vis = str(det_scores[0][i][0])[:7]
-        text_score_lwir = str(det_scores[0][i][1])[:7]
+        
+        text_score_bg = str(det_bg_scores[0][i].item())[:7]
+        text_score_vis = str(det_scores[0][i][0].item())[:7]
+        text_score_lwir = str(det_scores[0][i][1].item())[:7]
+        
         text_size_vis = font.getsize(text_score_vis)
         text_size_lwir = font.getsize(text_score_lwir)
+        text_size_bg = font.getsize(text_score_bg)
+        
+        text_location_bg = [box_location[0] + 2., box_location[1] - text_size_vis[1] - text_size_bg[1]]
+        textbox_location_bg = [box_location[0], box_location[1] - text_size_vis[1] - text_size_bg[1], box_location[0] + text_size_bg[0] + 4.,box_location[1]-text_size_vis[1]]
+        
         text_location_vis = [box_location[0] + 2., box_location[1] - text_size_vis[1]]
         textbox_location_vis = [box_location[0], box_location[1] - text_size_vis[1], box_location[0] + text_size_vis[0] + 4.,box_location[1]]
+        
         text_location_lwir = [box_location[0] + 2., box_location[1] - text_size_lwir[1]]
         textbox_location_lwir = [box_location[0], box_location[1] - text_size_lwir[1], box_location[0] + text_size_lwir[0] + 4.,box_location[1]]
 
         draw.rectangle(xy=textbox_location_vis, fill=label_color_map[det_labels[i]])
-        # draw.text(xy=text_location, text=det_labels[i].upper(), fill='white', font=font)
         draw.text(xy=text_location_vis, text='{:.4f}'.format(det_scores[0][i][0].item()), fill='white', font=font)
-
+        draw.text(xy=textbox_location_bg, text='{:.4f}'.format(det_bg_scores[0][i].item()), fill='white', font=font)
+        
         draw_lwir.rectangle(xy=textbox_location_lwir, fill=label_color_map[det_labels[i]])
-        # draw.text(xy=text_location, text=det_labels[i].upper(), fill='white', font=font)
         draw_lwir.text(xy=text_location_lwir, text='{:.4f}'.format(det_scores[0][i][1].item()), fill='white', font=font)
-    # del draw
+        draw.text(xy=textbox_location_bg, text='{:.4f}'.format(det_bg_scores[0][i].item()), fill='white', font=font)
     
     new_image = Image.new('RGB',(2*original_image.size[0], original_image.size[1]))
     new_image.paste(original_image,(0,0))

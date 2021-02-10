@@ -570,12 +570,14 @@ class SSD300(nn.Module):
         """
         batch_size = predicted_locs.size(0)
         n_priors = self.priors_cxcy.size(0)
-        predicted_scores = F.softmax(predicted_scores, dim=2)  # (N, 8732, n_classes)
+        # predicted_scores = F.softmax(predicted_scores, dim=2)
+        predicted_scores = torch.sigmoid(predicted_scores)
 
         # Lists to store final predicted boxes, labels, and scores for all images
         all_images_boxes = list()
         all_images_labels = list()
         all_images_scores = list()
+        all_images_bg_scores = list()
 
         assert n_priors == predicted_locs.size(1) == predicted_scores.size(1)
 
@@ -588,19 +590,20 @@ class SSD300(nn.Module):
             image_boxes = list()
             image_labels = list()
             image_scores = list()
-
-            max_scores, best_label = predicted_scores[i].max(dim=1)  # (8732)
-
+            image_bf_scores = list()
+            
             predicted_fg_scores = predicted_scores[i][:,1:].mean(dim=1)
             score_above_min_score = predicted_fg_scores > min_score
             n_above_min_score = score_above_min_score.sum().item()
 
             class_scores = predicted_scores[i][:,1:][score_above_min_score]
+            bg_scores = predicted_scores[i][:,0][score_above_min_score]
             class_decoded_locs = decoded_locs[score_above_min_score]
-
-            # Sort predicted boxes and scores by scores
+            
+            # Sort predicted boxes and scores by scores\
             _, sort_ind = class_scores.mean(dim=1).sort(dim=0, descending=True)
             class_scores = class_scores[sort_ind]
+            bg_scores = bg_scores[sort_ind]
             class_decoded_locs = class_decoded_locs[sort_ind]  # (n_min_score, 4)
 
             # Find the overlap between predicted boxes
@@ -614,7 +617,6 @@ class SSD300(nn.Module):
                 # If this box is already marked for suppression
                 if suppress[box] == 1:
                     continue
-
                 suppress = torch.max(suppress, overlap[box] > max_overlap)
                 suppress[box] = 0
 
@@ -622,32 +624,37 @@ class SSD300(nn.Module):
             image_boxes.append(class_decoded_locs[~suppress])
             image_labels.append(torch.ones((~suppress).sum().item()).to(device))
             image_scores.append(class_scores[~suppress])
+            image_bf_scores.append(bg_scores[~suppress])
 
             # If no object in any class is found, store a placeholder for 'background'
             if len(image_boxes) == 0:
                 image_boxes.append(torch.FloatTensor([[0., 0., 1., 1.]]).to(device))
                 image_labels.append(torch.LongTensor([0]).to(device))
                 image_scores.append(torch.FloatTensor([0.]).to(device))
+                image_bf_scores.append(orch.FloatTensor([0.]).to(device))
 
             # Concatenate into single tensors
             image_boxes = torch.cat(image_boxes, dim=0)
             image_labels = torch.cat(image_labels, dim=0)
             image_scores = torch.cat(image_scores, dim=0)
+            image_bg_scores = torch.cat(image_bf_scores, dim=0)
             n_objects = image_scores.size(0)
 
             # Keep only the top k objects
             if n_objects > top_k:
-                image_scores, sort_ind = image_scores.sort(dim=0, descending=True)
-                image_scores = image_scores[:top_k]  # (top_k)
+                _, sort_ind = image_scores.mean(dim=1).sort(dim=0, descending=True)
+                image_scores = image_scores[sort_ind][:top_k]  # (top_k)
                 image_boxes = image_boxes[sort_ind][:top_k]  # (top_k, 4)
                 image_labels = image_labels[sort_ind][:top_k]  # (top_k)
+                image_bg_scores = image_bg_scores[sort_ind][:top_k]
 
             # Append to lists that store predicted boxes and scores for all images
             all_images_boxes.append(image_boxes)
             all_images_labels.append(image_labels)
             all_images_scores.append(image_scores)
+            all_images_bg_scores.append(image_bg_scores)
 
-        return all_images_boxes, all_images_labels, all_images_scores  # lists of length batch_size
+        return all_images_boxes, all_images_labels, all_images_scores, all_images_bg_scores  # lists of length batch_size
 
 
 class MultiBoxLoss(nn.Module):

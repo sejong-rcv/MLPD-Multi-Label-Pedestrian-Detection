@@ -14,7 +14,7 @@ else:
     import xml.etree.ElementTree as ET
 
 from collections import namedtuple
-from torchcv.datasets import UnNormalize, Compose, ToTensor, ToPILImage, Normalize, Resize, RandomHorizontalFlip, RandomResizedCrop, ColorJitter
+from torchcv.datasets import UnNormalize, Compose, ToTensor, ToPILImage, Normalize, Resize, RandomHorizontalFlip, RandomResizedCrop, ColorJitter, TT_FixedHorizontalFlip
 
 DB_ROOT = './datasets/kaist-rgbt/'
 
@@ -31,8 +31,9 @@ OBJ_CLASSES = [ '__ignore__',   # Object with __backgroun__ label will be ignore
                 'person', 'cyclist', 'people', 'person?', 'unpaired']
 OBJ_IGNORE_CLASSES = [ 'cyclist', 'people', 'person?' , 'unpaired']
 
-OBJ_CLS_TO_IDX = { cls:1 if cls =='person' or cls == 'cyclist' or cls == 'people' \
-                    or cls == 'unpaired' else -1 for num, cls in enumerate(OBJ_CLASSES)}
+# OBJ_CLS_TO_IDX = { cls:1 if cls =='person' or cls == 'cyclist' or cls == 'people' \
+#                     or cls == 'unpaired' else -1 for num, cls in enumerate(OBJ_CLASSES)}
+OBJ_CLS_TO_IDX = { cls:1 if cls =='person' else -1 for num, cls in enumerate(OBJ_CLASSES)}
 
 OBJ_LOAD_CONDITIONS = {    
     'train': {'hRng': (12, np.inf), 'xRng':(5, 635), 'yRng':(5, 507), 'wRng':(-np.inf, np.inf)}, 
@@ -142,7 +143,7 @@ class KAISTPed(data.Dataset):
             for i in range(len(vis_boxes)) :
                 name = vis_boxes[i][0]
                 try : 
-                    # label_idx = OBJ_CLS_TO_IDX[name] if name not in OBJ_IGNORE_CLASSES else -1
+                    #label_idx = OBJ_CLS_TO_IDX[name] if name not in OBJ_IGNORE_CLASSES else -1
                     label_idx = 1
                 except :
                     import pdb;pdb.set_trace()
@@ -156,7 +157,7 @@ class KAISTPed(data.Dataset):
             for i in range(len(lwir_boxes)) :
                 name = lwir_boxes[i][0]
                 try :
-                    # label_idx = OBJ_CLS_TO_IDX[name] if name not in OBJ_IGNORE_CLASSES else -1
+                    #label_idx = OBJ_CLS_TO_IDX[name] if name not in OBJ_IGNORE_CLASSES else -1
                     label_idx =1 
                 except : 
                     import pdb;pdb.set_trace()
@@ -184,8 +185,8 @@ class KAISTPed(data.Dataset):
 
             if self.annotation == 'AR-CNN' and self.mode == 'train':    
 
-                vis, lwir, boxes_vis, boxes_lwir, pair = self.co_transform(vis, lwir, boxes_vis, boxes_lwir, pair)                
-
+                vis, lwir, boxes_vis, boxes_lwir, pair = self.co_transform(vis, lwir, boxes_vis, boxes_lwir, pair)                      
+                
                 if boxes_vis is None:
                     boxes = boxes_lwir
                 elif boxes_lwir is None:
@@ -197,6 +198,7 @@ class KAISTPed(data.Dataset):
                     ##  1  /  1  = 3
 
                     if pair == 1 :
+                        
                         if len(boxes_vis.shape) != 1 :
                             boxes_vis[1:,4] = 3
                         if len(boxes_lwir.shape) != 1 :
@@ -209,6 +211,7 @@ class KAISTPed(data.Dataset):
                     
                     boxes = torch.cat((boxes_vis,boxes_lwir), dim=0)
                     boxes = torch.tensor(list(map(list,set([tuple(bb) for bb in boxes.numpy()]))))  
+                    
             else :
                 vis, lwir, boxes_vis, boxes_lwir, pair = self.co_transform(vis, lwir, boxes_vis, boxes_lwir, pair)
                 if boxes_vis is None:
@@ -216,6 +219,22 @@ class KAISTPed(data.Dataset):
                 elif boxes_lwir is None:
                     boxes = boxes_vis
                 else : 
+                    ## RGB / Thermal
+                    ##  1  /  0  = 1
+                    ##  0  /  1  = 2
+                    ##  1  /  1  = 3
+
+                    if pair == 1 :
+                        
+                        if len(boxes_vis.shape) != 1 :
+                            boxes_vis[1:,4] = 3
+                        if len(boxes_lwir.shape) != 1 :
+                            boxes_lwir[1:,4] = 3
+                    else : 
+                        if len(boxes_vis.shape) != 1 :
+                            boxes_vis[1:,4] = 1
+                        if len(boxes_lwir.shape) != 1 :
+                            boxes_lwir[1:,4] = 2
                     boxes = torch.cat((boxes_vis,boxes_lwir), dim=0)
                     boxes = torch.tensor(list(map(list,set([tuple(bb) for bb in boxes.numpy()]))))  
 
@@ -308,7 +327,7 @@ class LoadBox(object):
             name = obj.find('name').text.lower().strip()            
             bbox = obj.find('bndbox')
 
-            # label_idx = OBJ_CLS_TO_IDX[name] if name not in OBJ_IGNORE_CLASSES else -1
+            #label_idx = OBJ_CLS_TO_IDX[name] if name not in OBJ_IGNORE_CLASSES else -1
             label_idx =1
             bndbox = [ int(bbox.find(pt).text) for pt in self.pts ]
 
