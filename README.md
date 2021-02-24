@@ -2,6 +2,14 @@
 
 This code is based on [a-PyTorch-Tutorial-to-Object-Detection](https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Object-Detection). 
 
+#### STEREO 
+
+![STEREO](https://user-images.githubusercontent.com/44772344/108985713-af3bac80-76d4-11eb-9a4c-e42f8c24620d.gif)
+
+#### EOIR
+
+
+
 ### Installation
 
 #### Git clone
