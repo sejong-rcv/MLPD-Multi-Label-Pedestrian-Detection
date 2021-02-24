@@ -1,5 +1,13 @@
 # Multi-Label-Pedestrian-Detection
 
+ _____  _____ ___  ______  ___ _____  _   _  _____   _____  _____  _____  _   _ 
+/  __ \|  _  ||  \/  ||  \/  ||_   _|| \ | ||  __ \ /  ___||  _  ||  _  || \ | |
+| /  \/| | | || .  . || .  . |  | |  |  \| || |  \/ \ `--. | | | || | | ||  \| |
+| |    | | | || |\/| || |\/| |  | |  | . ` || | __   `--. \| | | || | | || . ` |
+| \__/\\ \_/ /| |  | || |  | | _| |_ | |\  || |_\ \ /\__/ /\ \_/ /\ \_/ /| |\  |
+ \____/ \___/ \_|  |_/\_|  |_/ \___/ \_| \_/ \____/ \____/  \___/  \___/ \_| \_/
+
+
 This code is based on [a-PyTorch-Tutorial-to-Object-Detection](https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Object-Detection). 
 
 #### STEREO 
@@ -18,7 +26,7 @@ This code is based on [a-PyTorch-Tutorial-to-Object-Detection](https://github.co
 @INPROCEEDINGS{ACCV2020,
   author = {JIWON KIM*, HYEONGJUN KIM*, TAEJOO KIM*, NAMIL KIM, AND YUKYUNG CHOI*},
   title = {Multi-Label-Pedestrian-Detection},
-  booktitle = {-},
+  booktitle = {},
   year = {2021}
 }
 ```
