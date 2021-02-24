@@ -11,8 +11,6 @@ This code is based on [a-PyTorch-Tutorial-to-Object-Detection](https://github.co
 ![EOIR](https://user-images.githubusercontent.com/44772344/108986272-4e60a400-76d5-11eb-9ce4-d76dac5c3a3f.gif)
 
 
-```
-
 ### Citation
 
 ```
