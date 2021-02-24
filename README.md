@@ -4,14 +4,14 @@ This code is based on [a-PyTorch-Tutorial-to-Object-Detection](https://github.co
 
 ### Installation
 
-# Git clone
+#### Git clone
 
 ```
 git clone https://github.com/sejong-rcv/MLPD-Multi-Label-Pedestrian-Detection.git
 cd Multi-Lable-Pedestrian-Detection/docker
 ```
 
-# Build docker 
+#### Build docker 
 
 ```
 make docker-make
