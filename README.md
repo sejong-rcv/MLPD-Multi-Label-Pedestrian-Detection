@@ -4,6 +4,19 @@ This code is based on [a-PyTorch-Tutorial-to-Object-Detection](https://github.co
 
 ### Installation
 
+# Git clone
+
+```
+git clone https://github.com/sejong-rcv/MLPD-Multi-Label-Pedestrian-Detection.git
+cd Multi-Lable-Pedestrian-Detection/docker
+```
+
+# Build docker 
+
+```
+make docker-make
+```
+
 ### Dataset
 
 For Multispectral pedestrian detection, we train and test our model on [Multispectral Pedestrian Detection: Benchmark Dataset and Baselines](https://github.com/SoonminHwang/rgbt-ped-detection), you should firstly download the dataset. By default, we assume the dataset is stored in `./data/kaist-rgbt`. Please see details below
