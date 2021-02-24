@@ -1,11 +1,6 @@
 # Multi-Label-Pedestrian-Detection
 
- _____  _____ ___  ______  ___ _____  _   _  _____   _____  _____  _____  _   _ 
-/  __ \|  _  ||  \/  ||  \/  ||_   _|| \ | ||  __ \ /  ___||  _  ||  _  || \ | |
-| /  \/| | | || .  . || .  . |  | |  |  \| || |  \/ \ `--. | | | || | | ||  \| |
-| |    | | | || |\/| || |\/| |  | |  | . ` || | __   `--. \| | | || | | || . ` |
-| \__/\\ \_/ /| |  | || |  | | _| |_ | |\  || |_\ \ /\__/ /\ \_/ /\ \_/ /| |\  |
- \____/ \___/ \_|  |_/\_|  |_/ \___/ \_| \_/ \____/ \____/  \___/  \___/ \_| \_/
+![comming soon](https://user-images.githubusercontent.com/44772344/109009022-5a5a5f00-76f1-11eb-965a-da3d30416db2.png)
 
 
 This code is based on [a-PyTorch-Tutorial-to-Object-Detection](https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Object-Detection). 
