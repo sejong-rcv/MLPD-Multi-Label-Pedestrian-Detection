@@ -18,8 +18,8 @@
 ### Citation
 
 ```
-@INPROCEEDINGS{ACCV2020,
-  author = {JIWON KIM*, HYEONGJUN KIM*, TAEJOO KIM*, NAMIL KIM, AND YUKYUNG CHOI*},
+@INPROCEEDINGS{
+  author = {JIWON KIM*, HYEONGJUN KIM*, TAEJOO KIM*, NAMIL KIM, AND YUKYUNG CHOI†},
   title = {Multi-Label-Pedestrian-Detection},
   booktitle = {},
   year = {2021}
