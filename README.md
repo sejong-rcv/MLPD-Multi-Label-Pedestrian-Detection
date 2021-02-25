@@ -3,7 +3,7 @@
 
 ![comming soon](https://user-images.githubusercontent.com/44772344/109009022-5a5a5f00-76f1-11eb-965a-da3d30416db2.png)
 
-![demo](./video.giff)
+![demo](./video.gif)
 
 ### Citation
 
