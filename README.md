@@ -1,11 +1,11 @@
 # Multi-Label-Pedestrian-Detection Backup
 
+This code is based on [a-PyTorch-Tutorial-to-Object-Detection](https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Object-Detection). 
+
+
 ### Paper : [Paper](./MLPD/MLPD.pdf)
 ### Latex : [Latex](./MLPD/MLPD_Latex_Image_X.zip)
 ### Cover Letter : [Cover Letter](./MLPD/Cover_letter.pdf)
-
-
-This code is based on [a-PyTorch-Tutorial-to-Object-Detection](https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Object-Detection). 
 
 
 ### Installation
