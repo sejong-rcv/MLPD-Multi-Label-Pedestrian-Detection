@@ -9,7 +9,7 @@
 ### Citation
 
 ```
-@INPROCEEDINGS{ IROS, IEEE RA-L
+@INPROCEEDINGS{ IEEE RA-L with IROS2021
   author = {JIWON KIM*, HYEONGJUN KIM*, TAEJOO KIM*, NAMIL KIM, AND YUKYUNG CHOI†},
   title = {Multi-Label-Pedestrian-Detection},
   booktitle = {Under Review},
