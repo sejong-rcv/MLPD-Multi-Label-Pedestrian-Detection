@@ -1,32 +1,31 @@
-from utils import *
-from datasets import *
-from torchcv.datasets.transforms import *
-import torch.nn.functional as F
+import sys, os
+from os.path import join
+
+import argparse, json, pdb
 from tqdm import tqdm
 from pprint import PrettyPrinter
-import argparse
+from collections import namedtuple
 
-import torch
-import torch.utils.data as data
-import json
-import os
-import os.path
-import sys
-import cv2
-import numpy as np
-import matplotlib.pyplot as plt
-
-from PIL import Image, ImageDraw, ImageFont
-from utils import *
 if sys.version_info[0] == 2:
     import xml.etree.cElementTree as ET
 else:
     import xml.etree.ElementTree as ET
 
-import pdb
-from collections import namedtuple
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+import torch
+import torch.nn.functional as F
+import torch.utils.data as data
+
+from PIL import Image, ImageDraw, ImageFont
 
 
+from utils import *
+from datasets import *
+
+from torchcv.datasets.transforms import *
 from torchcv.utils import Timer, kaist_results_file as write_result, write_coco_format as write_result_coco
 
 ### Evaluation
@@ -107,7 +106,7 @@ elif test_mode == 'night' :
 
 
 
-def evaluate_coco(test_loader, model):
+def evaluate_matlab(test_loader, model):
     """
     Evaluate.
 
@@ -130,15 +129,8 @@ def evaluate_coco(test_loader, model):
     results = []
 
     with torch.no_grad():
-        # Batches
         
-        if test_mode == 'all' :
-            file_name = anno_save + '/det-test-all.txt'
-        elif test_mode == 'day' :
-            file_name = anno_save + '/det-test-day.txt'
-        elif test_mode == 'night' : 
-            file_name = anno_save + '/det-test-night.txt'
-        
+        file_name = join(anno_save, f'det-test-{test_mode}')
         f = open(file_name, 'w')
 
         for i, (image_vis, image_lwir, boxes, labels, index) in enumerate(tqdm(test_loader, desc='Evaluating')):

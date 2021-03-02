@@ -1,51 +1,40 @@
-import time
-import torch.backends.cudnn as cudnn
-import torch.optim
-import torch.utils.data
-import argparse
-
-from model import SSD300, MultiBoxLoss
-from datasets import *
-from utils import *
-from torchcv.datasets.transforms import *
-from torchcv.utils import run_tensorboard
-from tensorboardX import SummaryWriter
-import numpy as np
-
-### Logging
-import logging
-import logging.handlers
-from datetime import datetime
-from tensorboardX import SummaryWriter
-
-from utils import *
-from datasets import *
-from torchcv.datasets.transforms import *
-import torch.nn.functional as F
+import sys, os, pdb, time, json, argparse
 from tqdm import tqdm
 from pprint import PrettyPrinter
 
-import torch
-import torch.utils.data as data
-import json
-import os
-import os.path
-import sys
-import cv2
-import numpy as np
-import matplotlib.pyplot as plt
+from collections import namedtuple
 
-from PIL import Image, ImageDraw, ImageFont
-from utils import *
 if sys.version_info[0] == 2:
     import xml.etree.cElementTree as ET
 else:
     import xml.etree.ElementTree as ET
 
-import pdb
-from collections import namedtuple
+### Logging
+import logging
+# import logging.handlers
+from datetime import datetime
+from tensorboardX import SummaryWriter
 
 
+
+import torch
+import torch.utils.data as data
+import torch.backends.cudnn as cudnn
+import torch.nn.functional as F
+from PIL import Image, ImageDraw, ImageFont
+# import torch.optim
+# import torch.utils.data
+
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+from model import SSD300, MultiBoxLoss
+
+from utils import *
+from datasets import *
+from torchcv.datasets.transforms import *
+from torchcv.utils import run_tensorboard
 from torchcv.utils import Timer, kaist_results_file as write_result, write_coco_format as write_result_coco
 
 ### Evaluation

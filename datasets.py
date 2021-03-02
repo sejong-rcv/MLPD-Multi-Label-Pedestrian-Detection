@@ -1,20 +1,24 @@
-import torch
-import torch.utils.data as data
-import json
+import sys
 import os
 import os.path
-import sys
+from collections import namedtuple
+
+import json
+
 import cv2
 import numpy as np
+
 from PIL import Image, ImageDraw, ImageFont
+
+import torch
+import torch.utils.data as data
+from torchcv.datasets import UnNormalize, Compose, ToTensor, ToPILImage, Normalize, Resize, RandomHorizontalFlip, RandomResizedCrop, ColorJitter, TT_FixedHorizontalFlip
+
 from utils import *
 if sys.version_info[0] == 2:
     import xml.etree.cElementTree as ET
 else:
     import xml.etree.ElementTree as ET
-
-from collections import namedtuple
-from torchcv.datasets import UnNormalize, Compose, ToTensor, ToPILImage, Normalize, Resize, RandomHorizontalFlip, RandomResizedCrop, ColorJitter, TT_FixedHorizontalFlip
 
 DB_ROOT = './datasets/kaist-rgbt/'
 
