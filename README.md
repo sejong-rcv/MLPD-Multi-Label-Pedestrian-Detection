@@ -1,3 +1,20 @@
+# create_data_lists.py VOC 리스트 툴 # 제거 
+# detect.py, image_to_video 시각화 툴 # 제거 고려 중
+
+# eval_coco.py COCO_Tool을 이용한 평가 방법 : 심플하게 한다면 제거 할 것
+# eval_for_matlab.py : 메인 평가. 트레인을 공개하지 않는다면 해당 방법만 사용해서 평가 고려 중. -> 추후 eval.py로 수정 할 것.
+# eval.py : printing만 하는 평가 코드 <-util.py의 calculate_mAP를 이용한 평가 방법. 심플하게 한다면 제거 할 것
+
+# model.py : main, torchcv 사용 x
+
+
+# train_eval.py : main2,  torchcv -> datasets, utils, evaluation 사용함.
+
+# utils.py : torchcv 사용 x
+
+
+
+
 # Multi-Label-Pedestrian-Detection Backup
 
 This code is based on [a-PyTorch-Tutorial-to-Object-Detection](https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Object-Detection). 

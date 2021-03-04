@@ -33,6 +33,11 @@ from torchcv.evaluations.coco import COCO
 from torchcv.evaluations.eval_MR_multisetup import COCOeval
 
 
+import config
+import importlib
+
+args = importlib.import_module('config').args
+
 # Good formatting when printing the APs for each class and mAP
 pp = PrettyPrinter()
 
@@ -42,7 +47,7 @@ keep_difficult = True  # difficult ground truth objects must always be considere
 batch_size = 64
 workers = 4
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-checkpoint = './BEST_checkpoint_ssd300.pth.tar'
+checkpoint = './jobs/checkpoint_ssd300.pth.tar024' 
 
 # Load model checkpoint that is to be evaluated
 checkpoint = torch.load(checkpoint)
@@ -276,4 +281,4 @@ def evaluate_matlab(test_loader, model):
 
 
 if __name__ == '__main__':
-    evaluate(test_loader, model)
+    evaluate_coco(test_loader, model)

@@ -1,0 +1,4 @@
+*.pyc
+jobs/
+torchcv/__pycache__/
+datasets/

@@ -35,11 +35,12 @@ from utils import *
 from datasets import *
 from torchcv.datasets.transforms import *
 from torchcv.utils import run_tensorboard
-from torchcv.utils import Timer, kaist_results_file as write_result, write_coco_format as write_result_coco
+
 
 ### Evaluation
 from torchcv.evaluations.coco import COCO
 from torchcv.evaluations.eval_MR_multisetup import COCOeval
+from torchcv.utils import Timer, kaist_results_file as write_result, write_coco_format as write_result_coco
 
 annType = 'bbox'
 
