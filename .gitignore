@@ -1,3 +1,5 @@
 src/jobs/
 src/datasets
 src/result/
+src/__pycache__
+src/utils/__pycache__
