@@ -130,7 +130,8 @@ def main():
         
         if epoch >= 3 :
             rstFile = os.path.join(jobs_dir, './COCO_TEST_det_{:d}.json'.format(epoch)) 
-            evaluate_coco(test_loader, model, rstFile=rstFile, args=args)
+            
+            evaluate_coco(test_loader, model, rstFile=rstFile)
         
 
 def train(args, train_loader, model, criterion, optimizer, epoch, logger):

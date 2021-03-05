@@ -27,15 +27,13 @@ class VGGBase(nn.Module):
         self.conv1_1_vis = nn.Conv2d(3, 64, kernel_size=3, padding=1, bias=True) 
         self.conv1_1_bn_vis = nn.BatchNorm2d(64, affine=True)
         self.conv1_2_vis = nn.Conv2d(64, 64, kernel_size=3, padding=1, bias=True)
-        self.conv1_2_bn_vis = nn.BatchNorm2d(64, affine=True)
-        
+        self.conv1_2_bn_vis = nn.BatchNorm2d(64, affine=True)        
         self.pool1_vis = nn.MaxPool2d(kernel_size=2, stride=2, ceil_mode=True)
 
         self.conv2_1_vis = nn.Conv2d(64, 128, kernel_size=3, padding=1, bias=True)
         self.conv2_1_bn_vis = nn.BatchNorm2d(128, affine=True)
         self.conv2_2_vis = nn.Conv2d(128, 128, kernel_size=3, padding=1, bias=True)
         self.conv2_2_bn_vis = nn.BatchNorm2d(128, affine=True)
-
         self.pool2_vis = nn.MaxPool2d(kernel_size=2, stride=2, ceil_mode=True)
 
         self.conv3_1_vis = nn.Conv2d(128, 256, kernel_size=3, padding=1, bias=True)

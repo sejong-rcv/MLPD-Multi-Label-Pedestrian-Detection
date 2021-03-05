@@ -30,7 +30,7 @@ else:
     Iterable = collections.abc.Iterable
 
 
-__all__ = ["SynthFail","FaultTolerant","TT_FaultTolerant","UnNormalize", "Compose", "ToTensor", "ToPILImage", "Normalize", "Resize", 
+__all__ = ["FusionDeadZone","FaultTolerant","TT_FaultTolerant","UnNormalize", "Compose", "ToTensor", "ToPILImage", "Normalize", "Resize", 
            "Lambda", "RandomHorizontalFlip", "TT_RandomHorizontalFlip", "TT_FixedHorizontalFlip",  "RandomResizedCrop", "TT_RandomResizedCrop", "ColorJitter",
            "ColorJitterLWIR", "Stretch"]
 
@@ -83,10 +83,8 @@ class Compose(object):
         format_string += '\n)'
         return format_string
 
-class SynthFail(object):
-        
-    mask_types = ['crack', 'bug', 'dust']
-
+class FusionDeadZone(object):
+    
     def _blackout_(self, image):
         rr, gg, bb = image.split()
         rr = ImageChops.constant( rr, 0 )
@@ -95,44 +93,52 @@ class SynthFail(object):
         image = Image.merge( "RGB", (rr, gg, bb) )
         return image
 
-    def __init__(self, fail_masks, img_size, interpolation=Image.BILINEAR):        
-
-        if any( [ mask in fail_masks[0] for mask in self.mask_types ] ):
-            self.fail_mask_R = F.resize( Image.open(fail_masks[0]), img_size, interpolation )
-            self.fail_mask_R = self.fail_mask_R.convert('RGB')
+    def _sides_(self, image, right=False):
+        image = np.array(image)
+        cut_off = int(image.shape[1]/3)
+        if right:
+            image[:, :cut_off] = 0
         else:
-            self.fail_mask_R = None
-            
-        if any( [ mask in fail_masks[1] for mask in self.mask_types ] ):
-            self.fail_mask_T = F.resize( Image.open(fail_masks[1]), img_size, interpolation )
-            self.fail_mask_T = self.fail_mask_T.convert('L')
-        else:
-            self.fail_mask_T = None
+            image[:, -cut_off:] = 0
+        image = Image.fromarray(image)
+        return image
 
-        self.masks = [ os.path.basename(mask) for mask in fail_masks ]
+    def _surround_(self, image, x=120, y=96):
+        image = np.array(image)
+        image[:, :x] = 0
+        image[:, -x:] = 0
+        image[-y:, :] = 0
+        image[:y, :] = 0
+        
+        image = Image.fromarray(image)
+        return image
+
+    def __init__(self, FDZ_case, img_size, interpolation=Image.BILINEAR):        
+        
         self.interpolation = interpolation
+        self.FDZ_case=FDZ_case
         
-        if 'crack' in fail_masks[0]:
-            self.func_R = lambda x, mask: Image.blend(x, mask, 0.5)
-        elif 'dust' in fail_masks[0] or 'bug' in fail_masks[0]:
-            self.fail_mask_R = ImageOps.autocontrast(self.fail_mask_R)
-            self.func_R = lambda x, mask: ImageChops.subtract( x, mask )
-        elif 'blackout' in fail_masks[0]:
-            self.func_R = lambda x, mask: self._blackout_(x)
+        if 'blackout' in FDZ_case[0]:
+            self.func_R = lambda x: self._blackout_(x)
+        elif 'SidesBlackout_L' in FDZ_case[0]:
+            self.func_R = lambda x: self._sides_( x )
+        elif 'SidesBlackout_R' in FDZ_case[0]:
+            self.func_R = lambda x: self._sides_( x, right=True )
+        elif 'SurroundingBlackout' in FDZ_case[0]:
+            self.func_R = lambda x: self._surround_( x )
         else:
-            self.func_R = lambda x, mask: x
+            self.func_R = lambda x: x
 
-        if 'crack' in fail_masks[1]:
-            self.func_T = lambda x, mask: Image.blend(x, mask, 0.5)
-        elif 'dust' in fail_masks[1] or 'bug' in fail_masks[1]:
-            self.func_T = lambda x, mask: ImageChops.subtract( x, mask )
-            self.fail_mask_T = ImageOps.autocontrast(self.fail_mask_T)
-        elif 'blackout' in fail_masks[1]:
-            self.func_T = lambda x, mask: ImageChops.constant( x, 0 )
+        if 'blackout' in FDZ_case[1]:
+            self.func_T = lambda x: ImageChops.constant( x, 0 )
+        elif 'SidesBlackout_L' in FDZ_case[1]:
+            self.func_T = lambda x: self._sides_( x )
+        elif 'SidesBlackout_R' in FDZ_case[1]:
+            self.func_T = lambda x: self._sides_( x, right=True )
+        elif 'SurroundingBlackout' in FDZ_case[1]:
+            self.func_T = lambda x: self._surround_( x )
         else:
-            self.func_T = lambda x, mask: x
-
-        
+            self.func_T = lambda x: x
 
     def __call__(self, vis, lwir, box_vis=None, box_lwir=None):
         """
@@ -142,13 +148,13 @@ class SynthFail(object):
             Tensor: Normalized Tensor image.
         """
         
-        vis = self.func_R(vis, self.fail_mask_R)
-        lwir = self.func_T(lwir, self.fail_mask_T)
+        vis = self.func_R(vis)
+        lwir = self.func_T(lwir)
 
         return vis, lwir, box_vis, box_lwir
 
     def __repr__(self):        
-        return self.__class__.__name__ + '(mask for RGB={0}, mask for T={1})'.format(self.masks[0], self.masks[1])
+        return self.__class__.__name__ + '(mask for RGB={0}, mask for T={1})'.format(self.FDZ_case[0], self.FDZ_case[1])
 
 class FaultTolerant(object):
     def __init__(self, prob=[0.5, 0.5, [0.25,0.5,0.75]]):

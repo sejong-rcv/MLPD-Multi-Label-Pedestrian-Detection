@@ -1,20 +1,52 @@
 # 수정중
-## transforms.py pair=None 다 떼어 낼 것.
-- pair가 필요한 trasforms.. -> args.upaired_augmentation에서 정의함.
-  - TT_RandomHorizontalFlip
-  - TT_FixedHorizontalFlip
-  - TT_RandomResizedCrop
-  - config.py로 정리 완료함.
-- ~~train에서 사용하는 transfoms 함수에 모두 pair 인자가 적용된 상태~~
-  - args.upaired_augmentation 에 필요한 인자에만 적용되도록 변경.
-- SynthFail -> FusionDeadZone으로 변경하여 구성 및 원복 실험 예정.
-  - Blackout_{R, T}
-  - SidesBlackout_{R, T}
-  - SurroundingBlackout_{R, T}
+
 
 ## model.py 
  - 모델 파라미터도 config로 꺼내?
  - 모델 구조 Modulelist로 변환??? 
+ - vis
+  - conv1-1 3 64 Batch
+  - conv1-2 64 64 Batch Max
+
+  - conv2-1 64 128 Batch
+  - conv2-2 128 128 Batch Max
+
+  - conv3-1 128 256 Batch
+  - conv3-2 256 256 Batch Max
+
+  - conv4-1 256 512 Batch
+  - conv4-2 512 512 Batch
+  - conv4-3 512 512 Batch
+
+ - lwir
+  - conv1-1 1 64 Batch
+  - conv1-2 64 64 Batch Max
+
+  - conv2-1 64 128 Batch
+  - conv2-2 128 128 Batch Max
+
+  - conv3-1 128 256 Batch
+  - conv3-2 256 256 Batch Max
+
+  - conv4-1 256 512 Batch
+  - conv4-2 512 512 Batch
+  - conv4-3 512 512 Batch
+
+## transforms.py pair=None 다 떼어 낼 것.
+- SynthFail -> FusionDeadZone으로 변경하여 구성 및 원복 실험 중.
+  - 논문에 기재된 체크포인트 좀 주세요.
+  - Blackout
+  - SidesBlackout_{R, L} R:right cutoff L:left cutoff
+  - SurroundingBlackout
+
+  |         | 논문 MR | 측정 MR |
+  |--------|--|--|
+  |Original| 7.58  | 7.75 |
+  |Blackout_R| 16.34 | 17.83 |
+  |Blackout_T| 25.60 | 26.28 |
+  |streo_A| 21.56 | 27.62 |
+  |Streo_B| 15.40 | 23.06 |
+  |EOIR| 16.40 | 19.13 |
 
 # 수정 완료.
 ## train_eval.py
@@ -34,7 +66,14 @@
 
 ## utils
 - 필요한 파일과 함수만 선별하여 utils dir에 넣어둠.
-- 
+- transforms.py
+ - pair가 필요한 trasforms.. -> args.upaired_augmentation에서 정의함.
+  - TT_RandomHorizontalFlip
+  - TT_FixedHorizontalFlip
+  - TT_RandomResizedCrop
+  - config.py로 정리 완료함.
+  - ~~train에서 사용하는 transfoms 함수에 모두 pair 인자가 적용된 상태~~
+    - args.upaired_augmentation 에 필요한 인자에만 적용되도록 변경.
 
 ## 수정된 파일 구조
 ```

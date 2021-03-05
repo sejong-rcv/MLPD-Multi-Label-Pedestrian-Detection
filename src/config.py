@@ -32,8 +32,9 @@ train.img_set = f"train-{train.day}-20.txt"
 # Learning parameters
 # checkpoint = './jobs/2021-01-28_07h54m_SSD_KAIST_LF_Multi_Label/checkpoint_ssd300.pth.tar003'
 train.checkpoint = None
-train.batch_size = 8 # batch size
-train.start_epoch = 0  # start at this epoch
+train.checkpoint = './jobs/2021-03-05_11h38m_/checkpoint_ssd300.pth.tar003'
+train.batch_size = 4 # batch size
+train.start_epoch = 3  # start at this epoch
 train.epochs = 40  # number of epochs to run without early-stopping
 train.epochs_since_improvement = 0  # number of epochs since there was an improvement in the validation metric
 train.best_loss = 100.  # assume a high loss at first
@@ -68,17 +69,29 @@ test.checkpoint = "./jobs/checkpoint_ssd300.pth.tar024"
 test.input_size = [512., 640.]
 
 ### test ~~ datasets config
-test.batch_size = 16
+test.batch_size = 32
 test.eval_batch_size = 1
 
                     
 ### dataset
 dataset = edict()
-dataset.workers = 4
+dataset.workers = 0
 dataset.OBJ_LOAD_CONDITIONS = {    
                                   'train': {'hRng': (12, np.inf), 'xRng':(5, 635), 'yRng':(5, 507), 'wRng':(-np.inf, np.inf)}, 
                                   'test': {'hRng': (-np.inf, np.inf), 'xRng':(5, 635), 'yRng':(5, 507), 'wRng':(-np.inf, np.inf)}, 
                               }
+### Fusion Dead Zone
+FDZ_case = edict()
+
+FDZ_case.original = ["None", "None"]
+
+FDZ_case.blackout_R = ["blackout", "None"]
+FDZ_case.blackout_T = ["None", "blackout"]
+
+FDZ_case.SidesBlackout_a = ["SidesBlackout_R", "SidesBlackout_L"]
+FDZ_case.SidesBlackout_b = ["SidesBlackout_L", "SidesBlackout_R"]
+FDZ_case.SurroundingBlackout = ["None", "SurroundingBlackout"]
+
 
 
 
@@ -104,6 +117,11 @@ args["test"].co_transform = Compose([ToTensor(), \
                                      Normalize(IMAGE_MEAN, IMAGE_STD, 'R'), \
                                      Normalize(LWIR_MEAN, LWIR_STD, 'T')                        
                                     ])
+### FDZ_case : original, blackout_R, blackout_T, SidesBlackout_a, SidesBlackout_b, SurroundingBlackout
+FDZ = [FusionDeadZone(FDZ_case.original, tuple(test.input_size)) ]
+args["test"].img_transform.add(FDZ)
+
+
 
 args["train"].img_transform = Compose( [ColorJitter(0.3, 0.3, 0.3), 
                                         ColorJitterLWIR(contrast=0.3)])
