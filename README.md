@@ -1,4 +1,3 @@
-
 # 수정중
 ## transforms.py pair=None 다 떼어 낼 것.
 - pair가 필요한 trasforms.. -> args.upaired_augmentation에서 정의함.
@@ -17,11 +16,6 @@
  - 모델 파라미터도 config로 꺼내?
  - 모델 구조 Modulelist로 변환??? 
 
-## utils.py : torchcv 사용 x
-
-## 추가로 할 작업.
-- 필요없는 torchcv 코드 정리.
-
 # 수정 완료.
 ## train_eval.py
 - 수정 완료.
@@ -38,8 +32,39 @@
 - test: santized??? original???
 - 글로벌 변수 정리 완료.
 
+## utils
+- 필요한 파일과 함수만 선별하여 utils dir에 넣어둠.
+- 
 
-
+## 수정된 파일 구조
+```
+.
+├── README.md
+├── docker
+│   ├── Dockerfile
+│   ├── Makefile
+│   └── requirements.txt
+└── src
+    ├── config.py
+    ├── datasets -> /raid/datasets/
+    ├── datasets.py
+    ├── eval.py
+    ├── jobs
+    │   └── checkpoint_ssd300.pth.tar024
+    ├── model.py
+    ├── result
+    │   ├── COCO_TEST_det_all.jpg
+    │   └── COCO_TEST_det_all.json
+    ├── train_eval.py
+    └── utils
+        ├── __init__.py
+        ├── coco.py
+        ├── eval_MR_multisetup.py
+        ├── functional.py
+        ├── trace_error.py
+        ├── transforms.py
+        └── utils.py
+```
 
 # Multi-Label-Pedestrian-Detection Backup
 
