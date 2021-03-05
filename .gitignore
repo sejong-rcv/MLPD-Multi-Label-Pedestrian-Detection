@@ -1,5 +1,3 @@
-*.pyc
-jobs/
-torchcv/__pycache__/
-datasets
-result/
+src/jobs/
+src/datasets
+src/result/
