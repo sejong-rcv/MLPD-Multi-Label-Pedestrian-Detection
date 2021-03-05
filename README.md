@@ -2,39 +2,10 @@
 
 
 ## model.py 
- - 모델 파라미터도 config로 꺼내?
- - 모델 구조 Modulelist로 변환??? 
- - vis
-  - conv1-1 3 64 Batch
-  - conv1-2 64 64 Batch Max
-
-  - conv2-1 64 128 Batch
-  - conv2-2 128 128 Batch Max
-
-  - conv3-1 128 256 Batch
-  - conv3-2 256 256 Batch Max
-
-  - conv4-1 256 512 Batch
-  - conv4-2 512 512 Batch
-  - conv4-3 512 512 Batch
-
- - lwir
-  - conv1-1 1 64 Batch
-  - conv1-2 64 64 Batch Max
-
-  - conv2-1 64 128 Batch
-  - conv2-2 128 128 Batch Max
-
-  - conv3-1 128 256 Batch
-  - conv3-2 256 256 Batch Max
-
-  - conv4-1 256 512 Batch
-  - conv4-2 512 512 Batch
-  - conv4-3 512 512 Batch
-
+ - Modulist 적용 예정
+ 
 ## transforms.py pair=None 다 떼어 낼 것.
 - SynthFail -> FusionDeadZone으로 변경하여 구성 및 원복 실험 중.
-  - 논문에 기재된 체크포인트 좀 주세요.
   - Blackout
   - SidesBlackout_{R, L} R:right cutoff L:left cutoff
   - SurroundingBlackout
@@ -48,32 +19,29 @@
   |Streo_B| 15.40 | 23.06 |
   |EOIR| 16.40 | 19.13 |
 
-# 수정 완료.
-## train_eval.py
+## 수정 완료.
+### train_eval.py
 - 수정 완료.
 
-## eval.py
-- ~~3가지 eval 중 무엇으로 할지 선정할 것!~~
-  - COCO tool 기반의 evaluate_coco, Matlab 기반의 evaluate_matlab으로 구성함.
+### eval.py
+- COCO tool 기반의 evaluate_coco, Matlab 기반의 evaluate_matlab으로 구성
 - 코드 정리는 완료.
-- 논문 성능 7.58, 성능 원복이 가능한 checkpoint를 구해야할 듯. (MR 7.75????, checkpoint_ssd300.pth.tar024) 
 
-## dataset.py
+### dataset.py
 - transform : pair, ARCNN - train 종속 제거
-- Paired annotation : train 단일로 변경 완료.
+- Paired annotation : train 단일로 변경.
 - test: santized??? original???
 - 글로벌 변수 정리 완료.
 
-## utils
+### utils
 - 필요한 파일과 함수만 선별하여 utils dir에 넣어둠.
 - transforms.py
- - pair가 필요한 trasforms.. -> args.upaired_augmentation에서 정의함.
+ - pair가 필요한 trasforms.. -> args.upaired_augmentation에서 정의
   - TT_RandomHorizontalFlip
   - TT_FixedHorizontalFlip
   - TT_RandomResizedCrop
-  - config.py로 정리 완료함.
-  - ~~train에서 사용하는 transfoms 함수에 모두 pair 인자가 적용된 상태~~
-    - args.upaired_augmentation 에 필요한 인자에만 적용되도록 변경.
+- config.py로 정리 완료
+
 
 ## 수정된 파일 구조
 ```
@@ -162,7 +130,36 @@ For Multispectral pedestrian detection, we train and test our model on [Multispe
 |   |   |   +-- test-all-20.txt
 
 ```
+```
+- vis
+  - conv1-1 3 64 Batch
+  - conv1-2 64 64 Batch Max
 
+  - conv2-1 64 128 Batch
+  - conv2-2 128 128 Batch Max
+
+  - conv3-1 128 256 Batch
+  - conv3-2 256 256 Batch Max
+
+  - conv4-1 256 512 Batch
+  - conv4-2 512 512 Batch
+  - conv4-3 512 512 Batch
+
+ - lwir
+  - conv1-1 1 64 Batch
+  - conv1-2 64 64 Batch Max
+
+  - conv2-1 64 128 Batch
+  - conv2-2 128 128 Batch Max
+
+  - conv3-1 128 256 Batch
+  - conv3-2 256 256 Batch Max
+
+  - conv4-1 256 512 Batch
+  - conv4-2 512 512 Batch
+  - conv4-3 512 512 Batch
+
+```
 
 ### Citation
 

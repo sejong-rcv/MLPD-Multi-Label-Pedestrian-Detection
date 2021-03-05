@@ -64,7 +64,7 @@ test.result_path = './result'
 test.annotation = "AR-CNN"
 
 ### test model
-test.checkpoint = "./jobs/checkpoint_ssd300.pth.tar024"
+test.checkpoint = "./jobs/checkpoint_ssd300.pth.tar025"
 
 test.input_size = [512., 640.]
 
