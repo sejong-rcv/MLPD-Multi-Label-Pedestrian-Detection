@@ -1,4 +1,5 @@
 *.pyc
 jobs/
 torchcv/__pycache__/
-datasets/
+datasets
+result/

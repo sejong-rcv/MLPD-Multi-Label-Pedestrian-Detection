@@ -1,9 +1,13 @@
-import json
-import os
+import os,json
+
 import torch
+import numpy as np
 import random
 import xml.etree.ElementTree as ET
 import torchvision.transforms.functional as FT
+
+import logging
+import logging.handlers
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -19,6 +23,45 @@ distinct_colors = ['#e6194b', '#3cb44b', '#ffe119', '#0082c8', '#f58231', '#911e
                    '#ffd8b1', '#e6beff', '#808080', '#FFFFFF']
 label_color_map = {k: distinct_colors[i] for i, k in enumerate(label_map.keys())}
 
+
+def make_logger(args):
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+
+    fmt = logging.Formatter('[%(levelname)s] [%(asctime)-11s] %(message)s')
+    h = logging.StreamHandler()
+    h.setFormatter(fmt)
+    logger.addHandler(h)
+
+    h = logging.FileHandler(os.path.join(args.jobs_dir, 'log_{:s}.txt'.format(args.exp_time)))
+    h.setFormatter(fmt)
+    logger.addHandler(h)
+
+    settings = vars(args)
+    for key, value in settings.items():
+        settings[key] = value   
+
+    logger.info('Exp time: {}'.format(settings['exp_time']))
+    for key, value in settings.items():
+        if key == 'exp_time':
+            continue
+        logger.info('\t{}: {}'.format(key, value))
+
+    logger.info('Preprocess for training')
+    logger.info( args["train"].img_transform )
+    logger.info('Transforms for training')
+    logger.info( args["train"].co_transform )
+
+    return logger
+
+def set_seed(seed=1234):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = False
+    torch.backends.cudnn.benchmark = True
 
 def parse_annotation(annotation_path):
     tree = ET.parse(annotation_path)

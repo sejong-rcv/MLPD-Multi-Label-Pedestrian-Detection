@@ -1,62 +1,18 @@
-import sys
-import os
-import os.path
-from collections import namedtuple
+import sys,os,json
 
-import json
-
-import cv2
 import numpy as np
-
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 
 import torch
 import torch.utils.data as data
-from torchcv.datasets import UnNormalize, Compose, ToTensor, ToPILImage, Normalize, Resize, RandomHorizontalFlip, RandomResizedCrop, ColorJitter, TT_FixedHorizontalFlip
 
-from utils import *
 if sys.version_info[0] == 2:
     import xml.etree.cElementTree as ET
 else:
     import xml.etree.ElementTree as ET
 
-DB_ROOT = './datasets/kaist-rgbt/'
+from utils import *
 
-JSON_GT_FILE = os.path.join( DB_ROOT, 'kaist_annotations_test20.json' )
-
-DAY_NIGHT_CLS = {
-    'set00': 1, 'set01': 1, 'set02': 1,
-    'set03': 0, 'set04': 0, 'set05': 0,
-    'set06': 1, 'set07': 1, 'set08': 1,
-    'set09': 0, 'set10': 0, 'set11': 0,
-}
-
-OBJ_CLASSES = [ '__ignore__',   # Object with __backgroun__ label will be ignored.
-                'person', 'cyclist', 'people', 'person?', 'unpaired']
-OBJ_IGNORE_CLASSES = [ 'cyclist', 'people', 'person?' , 'unpaired']
-
-# OBJ_CLS_TO_IDX = { cls:1 if cls =='person' or cls == 'cyclist' or cls == 'people' \
-#                     or cls == 'unpaired' else -1 for num, cls in enumerate(OBJ_CLASSES)}
-OBJ_CLS_TO_IDX = { cls:1 if cls =='person' else -1 for num, cls in enumerate(OBJ_CLASSES)}
-
-OBJ_LOAD_CONDITIONS = {    
-    'train': {'hRng': (12, np.inf), 'xRng':(5, 635), 'yRng':(5, 507), 'wRng':(-np.inf, np.inf)}, 
-    'test': {'hRng': (-np.inf, np.inf), 'xRng':(5, 635), 'yRng':(5, 507), 'wRng':(-np.inf, np.inf)}, 
-}
-
-#### General
-IMAGE_MEAN = (0.3465,  0.3219,  0.2842)
-IMAGE_STD = (0.2358, 0.2265, 0.2274)
-
-LWIR_MEAN = (0.1598)
-LWIR_STD = (0.0813)
-
-classInfo = namedtuple('TASK', 'detection')
-
-tensor2image = Compose( [UnNormalize((0.3465,0.3219,0.2842), (0.2358,0.2265,0.2274)), ToPILImage('RGB'), Resize([512,640])])
-tensor2lwir = Compose( [UnNormalize([0.1598], [0.0813]), ToPILImage('L'), Resize([512,640])])
-
- 
 class KAISTPed(data.Dataset):
     """KAIST Detection Dataset Object
     input is image, target is annotation
@@ -74,36 +30,29 @@ class KAISTPed(data.Dataset):
             (default: 'Reasonabel')
     """
 
-    def __init__(self, image_set, img_transform=None, co_transform=None, condition='train', annotation='KAIST'):
-
-        assert condition in OBJ_LOAD_CONDITIONS
+    # def __init__(self, image_set, img_transform=None, co_transform=None, condition='train', annotation='KAIST'):
+    def __init__(self, args, condition='train'):
+        self.args = args
+        assert condition in args.dataset.OBJ_LOAD_CONDITIONS
         
         self.mode = condition
-        self.image_set = image_set
-        self.img_transform = img_transform
-        self.co_transform = co_transform        
-        self.cond = OBJ_LOAD_CONDITIONS[condition]
-        self.annotation = annotation
+        self.image_set = args[condition].img_set
+        self.img_transform = args[condition].img_transform
+        self.co_transform = args[condition].co_transform        
+        self.cond = args.dataset.OBJ_LOAD_CONDITIONS[condition]
+        self.annotation = args[condition].annotation
         self._parser = LoadBox()        
 
         if condition == 'train' :
-            if annotation == 'AR-CNN' : 
-                # AR-CNN Annotation
-                self._annopath = os.path.join('%s', 'annotations_paired', '%s', '%s', '%s', '%s.txt')
-            elif annotation == 'Sanitize' :
-                # sanitized_annotaiton
-                self._annopath = os.path.join('%s', 'annotations-xml-181027', '%s', '%s', '%s.xml')
-            else :
-                # ori_annotaiton
-                self._annopath = os.path.join('%s', 'annotations-xml-15', '%s', '%s', '%s.xml')
+            self._annopath = os.path.join('%s', 'annotations_paired', '%s', '%s', '%s', '%s.txt')
         else :
             self._annopath = os.path.join('%s', 'annotations-xml-15', '%s', '%s', '%s.xml')
 
         self._imgpath = os.path.join('%s', 'images', '%s', '%s', '%s', '%s.jpg')  
         
         self.ids = list()
-        for line in open(os.path.join(DB_ROOT, 'imageSets', image_set)):
-            self.ids.append((DB_ROOT, line.strip().split('/')))
+        for line in open(os.path.join(self.args.path.DB_ROOT, 'imageSets', self.image_set)):
+            self.ids.append((self.args.path.DB_ROOT, line.strip().split('/')))
 
     def __str__(self):
         return self.__class__.__name__ + '_' + self.image_set
@@ -118,8 +67,8 @@ class KAISTPed(data.Dataset):
         frame_id = self.ids[index]
         set_id, vid_id, img_id = frame_id[-1]
         
-        if self.annotation == 'AR-CNN' and self.mode == 'train': 
-            
+        # paired annotation
+        if self.mode == 'train': 
             vis_boxes = list()
             lwir_boxes = list()
 
@@ -130,7 +79,7 @@ class KAISTPed(data.Dataset):
 
             vis_boxes = vis_boxes[1:]
             lwir_boxes = lwir_boxes[1:]
-
+        # test는 뭐였더라 기억이 안남,
         else :
             target = ET.parse(self._annopath % ( *frame_id[:-1], *frame_id[-1] ) ).getroot()
 
@@ -139,37 +88,26 @@ class KAISTPed(data.Dataset):
     
         width, height = lwir.size
 
-        if self.annotation == 'AR-CNN' and self.mode == 'train': 
-
+        if self.mode == 'train': 
             boxes_vis = [[0, 0, 0, 0, -1]]
             boxes_lwir = [[0, 0, 0, 0, -1]]
 
             for i in range(len(vis_boxes)) :
                 name = vis_boxes[i][0]
-                try : 
-                    #label_idx = OBJ_CLS_TO_IDX[name] if name not in OBJ_IGNORE_CLASSES else -1
-                    label_idx = 1
-                except :
-                    import pdb;pdb.set_trace()
                 bndbox = [int(i) for i in vis_boxes[i][1:5]]
                 bndbox[2] = min( bndbox[2] + bndbox[0], width )
                 bndbox[3] = min( bndbox[3] + bndbox[1], height )
                 bndbox = [ cur_pt / width if i % 2 == 0 else cur_pt / height for i, cur_pt in enumerate(bndbox) ]
-                bndbox.append(label_idx)
+                bndbox.append(1)
                 boxes_vis += [bndbox]
 
             for i in range(len(lwir_boxes)) :
                 name = lwir_boxes[i][0]
-                try :
-                    #label_idx = OBJ_CLS_TO_IDX[name] if name not in OBJ_IGNORE_CLASSES else -1
-                    label_idx =1 
-                except : 
-                    import pdb;pdb.set_trace()
                 bndbox = [int(i) for i in lwir_boxes[i][1:5]]
                 bndbox[2] = min( bndbox[2] + bndbox[0], width )
                 bndbox[3] = min( bndbox[3] + bndbox[1], height )
                 bndbox = [ cur_pt / width if i % 2 == 0 else cur_pt / height for i, cur_pt in enumerate(bndbox) ]
-                bndbox.append(label_idx)
+                bndbox.append(1)
                 boxes_lwir += [bndbox]
 
             boxes_vis = np.array(boxes_vis, dtype=np.float)
@@ -181,66 +119,40 @@ class KAISTPed(data.Dataset):
 
         ## Apply transforms
         if self.img_transform is not None:
-            vis, lwir, boxes_vis , boxes_lwir = self.img_transform(vis, lwir, boxes_vis, boxes_lwir)
+            vis, lwir, boxes_vis , boxes_lwir, _ = self.img_transform(vis, lwir, boxes_vis, boxes_lwir)
 
         if self.co_transform is not None:
             
             pair = 1
 
-            if self.annotation == 'AR-CNN' and self.mode == 'train':    
+            vis, lwir, boxes_vis, boxes_lwir, pair = self.co_transform(vis, lwir, boxes_vis, boxes_lwir, pair)                      
+            
+            if boxes_vis is None:
+                boxes = boxes_lwir
+            elif boxes_lwir is None:
+                boxes = boxes_vis
+            else : 
 
-                vis, lwir, boxes_vis, boxes_lwir, pair = self.co_transform(vis, lwir, boxes_vis, boxes_lwir, pair)                      
+                ## Pair Condition
+                ## RGB / Thermal
+                ##  1  /  0  = 1
+                ##  0  /  1  = 2
+                ##  1  /  1  = 3
+
+                if pair == 1 :
+                    
+                    if len(boxes_vis.shape) != 1 :
+                        boxes_vis[1:,4] = 3
+                    if len(boxes_lwir.shape) != 1 :
+                        boxes_lwir[1:,4] = 3
+                else : 
+                    if len(boxes_vis.shape) != 1 :
+                        boxes_vis[1:,4] = 1
+                    if len(boxes_lwir.shape) != 1 :
+                        boxes_lwir[1:,4] = 2
                 
-                if boxes_vis is None:
-                    boxes = boxes_lwir
-                elif boxes_lwir is None:
-                    boxes = boxes_vis
-                else : 
-                    ## RGB / Thermal
-                    ##  1  /  0  = 1
-                    ##  0  /  1  = 2
-                    ##  1  /  1  = 3
-
-                    if pair == 1 :
-                        
-                        if len(boxes_vis.shape) != 1 :
-                            boxes_vis[1:,4] = 3
-                        if len(boxes_lwir.shape) != 1 :
-                            boxes_lwir[1:,4] = 3
-                    else : 
-                        if len(boxes_vis.shape) != 1 :
-                            boxes_vis[1:,4] = 1
-                        if len(boxes_lwir.shape) != 1 :
-                            boxes_lwir[1:,4] = 2
-                    
-                    boxes = torch.cat((boxes_vis,boxes_lwir), dim=0)
-                    boxes = torch.tensor(list(map(list,set([tuple(bb) for bb in boxes.numpy()]))))  
-                    
-            else :
-                vis, lwir, boxes_vis, boxes_lwir, pair = self.co_transform(vis, lwir, boxes_vis, boxes_lwir, pair)
-                if boxes_vis is None:
-                    boxes = boxes_lwir
-                elif boxes_lwir is None:
-                    boxes = boxes_vis
-                else : 
-                    ## RGB / Thermal
-                    ##  1  /  0  = 1
-                    ##  0  /  1  = 2
-                    ##  1  /  1  = 3
-
-                    if pair == 1 :
-                        
-                        if len(boxes_vis.shape) != 1 :
-                            boxes_vis[1:,4] = 3
-                        if len(boxes_lwir.shape) != 1 :
-                            boxes_lwir[1:,4] = 3
-                    else : 
-                        if len(boxes_vis.shape) != 1 :
-                            boxes_vis[1:,4] = 1
-                        if len(boxes_lwir.shape) != 1 :
-                            boxes_lwir[1:,4] = 2
-                    boxes = torch.cat((boxes_vis,boxes_lwir), dim=0)
-                    boxes = torch.tensor(list(map(list,set([tuple(bb) for bb in boxes.numpy()]))))  
+                boxes = torch.cat((boxes_vis,boxes_lwir), dim=0)
+                boxes = torch.tensor(list(map(list,set([tuple(bb) for bb in boxes.numpy()]))))   
 
         ## Set ignore flags
         ignore = torch.zeros( boxes.size(0), dtype=torch.bool)
@@ -330,9 +242,6 @@ class LoadBox(object):
         for obj in target.iter('object'):           
             name = obj.find('name').text.lower().strip()            
             bbox = obj.find('bndbox')
-
-            #label_idx = OBJ_CLS_TO_IDX[name] if name not in OBJ_IGNORE_CLASSES else -1
-            label_idx =1
             bndbox = [ int(bbox.find(pt).text) for pt in self.pts ]
 
             if self.bbs_format in ['xyxy']:
@@ -341,7 +250,7 @@ class LoadBox(object):
 
             bndbox = [ cur_pt / width if i % 2 == 0 else cur_pt / height for i, cur_pt in enumerate(bndbox) ]
             
-            bndbox.append(label_idx)
+            bndbox.append(1)
             res += [bndbox]  # [xmin, ymin, xmax, ymax, label_ind, occ]
             
         return np.array(res, dtype=np.float)  # [[xmin, ymin, xmax, ymax, label_ind], ... ]

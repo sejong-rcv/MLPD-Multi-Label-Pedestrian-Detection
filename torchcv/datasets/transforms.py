@@ -53,25 +53,30 @@ class Compose(object):
         >>> ])
     """
 
-    def __init__(self, transforms):
+    def __init__(self, transforms, args=None):
         self.transforms = transforms
+        self.args = args
 
     def add(self, transforms):
         self.transforms += transforms
 
-    def __call__(self, img, mask=None, vis_box=None, lwir_box=None, pair=None):
+    def __call__(self, img, mask=None, vis_box=None, lwir_box=None, pair=1):
 
-        if pair is None :
-            for t in self.transforms:                    
-                img, mask, vis_box, lwir_box = t(img, mask, vis_box, lwir_box)
-            return img, mask, vis_box, lwir_box
-        else : 
-            for t in self.transforms:                    
-                img, mask, vis_box, lwir_box, pair = t(img, mask, vis_box, lwir_box, pair)
-            return img, mask, vis_box, lwir_box, pair
+        for t in self.transforms:    
+            try:
+                if self.args != None and t.__class__.__name__ in self.args.upaired_augmentation:
+                    img, mask, vis_box, lwir_box, pair = t(img, mask, vis_box, lwir_box, pair)
+                else:
+                    img, mask, vis_box, lwir_box = t(img, mask, vis_box, lwir_box)
+            except:
+                import pdb;pdb.set_trace()
+        
+        return img, mask, vis_box, lwir_box, pair
 
     def __repr__(self):
+
         format_string = self.__class__.__name__ + '('
+
         for t in self.transforms:
             format_string += '\n'
             format_string += '    {0}'.format(t)
@@ -194,7 +199,7 @@ class ToTensor(object):
     [0, 255] to a torch.FloatTensor of shape (C x H x W) in the range [0.0, 1.0].
     """
 
-    def __call__(self, pic, ann=None, box_vis=None, box_lwir=None, pair=None):
+    def __call__(self, pic, ann=None, box_vis=None, box_lwir=None):
         """
         Args:
             pic (PIL Image or numpy.ndarray): Image to be converted to tensor.
@@ -206,7 +211,9 @@ class ToTensor(object):
         box_vis = torch.FloatTensor(box_vis) if box_vis is not None else None
         box_lwir = torch.FloatTensor(box_lwir) if box_lwir is not None else None
 
-        return pic, ann, box_vis, box_lwir, pair      
+
+        return pic, ann, box_vis, box_lwir
+    
 
     def __repr__(self):
         return self.__class__.__name__ + '()'
@@ -262,7 +269,7 @@ class Normalize(object):
         self.std = std
         self.applitedTo = applitedTo
 
-    def __call__(self, tensor, mask=None, box_vis=None, box_lwir=None, pair=None):
+    def __call__(self, tensor, mask=None, box_vis=None, box_lwir=None):
         """
         Args:
             tensor (Tensor): Tensor image of size (C, H, W) to be normalized.
@@ -276,7 +283,8 @@ class Normalize(object):
         else:
             raise NotImplementedError
 
-        return tensor, mask, box_vis, box_lwir, pair
+        return tensor, mask, box_vis, box_lwir
+
 
     def __repr__(self):
         return self.__class__.__name__ + '(mean={0}, std={1})'.format(self.mean, self.std)
@@ -357,7 +365,7 @@ class Resize(object):
         self.size = size
         self.interpolation = interpolation
 
-    def __call__(self, img, mask=None, boxes_vis=None, boxes_lwir=None, pair=None):
+    def __call__(self, img, mask=None, boxes_vis=None, boxes_lwir=None):
         """
         Args:
             img (PIL Image): Image to be scaled.
@@ -367,7 +375,9 @@ class Resize(object):
         img = F.resize(img, self.size, self.interpolation)
         mask = F.resize(mask, self.size, self.interpolation) if mask is not None else None
 
-        return img, mask, boxes_vis, boxes_lwir, pair
+
+        return img, mask, boxes_vis, boxes_lwir
+
 
     def __repr__(self):
         interpolate_str = _pil_interpolation_to_str[self.interpolation]
@@ -1124,7 +1134,7 @@ class ColorJitterLWIR(object):
 
         if brightness is not None:
             brightness_factor = random.uniform(brightness[0], brightness[1])
-            transforms.append(Lambda(lambda img, mask, boxes_vis, boxes_lwir: (img, F.adjust_brightness(mask, brightness_factor), boxes_vis, boxes_lwir, pair) ))
+            transforms.append(Lambda(lambda img, mask, boxes_vis, boxes_lwir: (img, F.adjust_brightness(mask, brightness_factor), boxes_vis, boxes_lwir) ))
 
         if contrast is not None:
             contrast_factor = random.uniform(contrast[0], contrast[1])
@@ -1153,7 +1163,7 @@ class ColorJitterLWIR(object):
         transform = self.get_params(self.brightness, self.contrast,
                                     self.saturation, self.hue)
 
-        return transform(img, mask, boxes_vis, boxes_lwir)
+        return transform(img, mask, boxes_vis, boxes_lwir)[:-1]
 
     def __repr__(self):
         format_string = self.__class__.__name__ + '('
@@ -1246,7 +1256,7 @@ class ColorJitter(object):
         transform = self.get_params(self.brightness, self.contrast,
                                     self.saturation, self.hue)
 
-        return transform(img, mask, boxes_vis, boxes_lwir)
+        return transform(img, mask, boxes_vis, boxes_lwir)[:-1]
 
     def __repr__(self):
         format_string = self.__class__.__name__ + '('

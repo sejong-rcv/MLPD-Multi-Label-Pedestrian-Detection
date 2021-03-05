@@ -5,67 +5,112 @@ from easydict import EasyDict as edict
 import torch
 import numpy as np
 
+from torchcv.datasets.transforms import *
 
-path = edict()
+os.environ["CUDA_VISIBLE_DEVICES"]="7"
 
-path.DB_ROOT = './datasets/kaist-rgbt/'
-path.JSON_GT_FILE = os.path.join( path.DB_ROOT, 'kaist_annotations_test20.json' )
+#### General
+IMAGE_MEAN = [0.3465,  0.3219,  0.2842]
+IMAGE_STD = [0.2358, 0.2265, 0.2274]
 
-
-## eval
-eval = edict()
-# Parameters
-#eval.data_folder = './datasets/kaist-rgbt/' -> path.DB_ROOT
-
-eval.keep_difficult = True  # difficult ground truth objects must always be considered in mAP calculation, because these objects DO exist!
-# eval.batch_size = 64 -> dataset.batch_size
-# eval.workers = 4 -> ..
-# eval.device = torch.device("cuda" if torch.cuda.is_available() else "cpu") -> ..
-eval.checkpoint = '/raid/tjkim/workspace/journal/code/MLPD-Multi-Label-Pedestrian-Detection-Backup/jobs/checkpoint_ssd300.pth.tar024' 
+LWIR_MEAN = [0.1598]
+LWIR_STD = [0.0813]
 
 
-# # Load test data
-# eval.preprocess1 = Compose([ Resize([300, 300])])    
-# eval.transforms1 = Compose([ ToTensor(), \
-#                         Normalize([0.3465,0.3219,0.2842], [0.2358,0.2265,0.2274], 'R'), \
-#                         Normalize([0.1598], [0.0813], 'T')                        
-#                         ])
+## path
+PATH = edict()
+
+PATH.DB_ROOT = './datasets/kaist-rgbt/'
+PATH.JSON_GT_FILE = os.path.join( PATH.DB_ROOT, 'kaist_annotations_test20.json' )
+
+## train
+train = edict()
+
+train.day = "all"
+train.img_set = f"train-{train.day}-20.txt"
+
+# Learning parameters
+# checkpoint = './jobs/2021-01-28_07h54m_SSD_KAIST_LF_Multi_Label/checkpoint_ssd300.pth.tar003'
+train.checkpoint = None
+train.batch_size = 8 # batch size
+train.start_epoch = 0  # start at this epoch
+train.epochs = 40  # number of epochs to run without early-stopping
+train.epochs_since_improvement = 0  # number of epochs since there was an improvement in the validation metric
+train.best_loss = 100.  # assume a high loss at first
+
+train.lr = 1e-4   # learning rate
+train.momentum = 0.9  # momentum
+train.weight_decay = 5e-4  # weight decay
+train.grad_clip = None  # clip if gradients are exploding, which may happen at larger batch sizes (sometimes at 32) - you will recognize it by a sorting error in the MuliBox loss calculation
+
+train.print_freq=10
+
+train.annotation = "AR-CNN" # AR-CNN, Sanitize, Original 
 
 
+
+## test
+test = edict()
+
+test.day = "all"
+test.img_set = f"test-{test.day}-20.txt"
+
+### coco tool용.
+test.result_path = './result'
+
+test.annotation = "AR-CNN"
+
+### test model
+test.checkpoint = "./jobs/checkpoint_ssd300.pth.tar024"
+
+test.input_size = [512., 640.]
+
+### test ~~ datasets config
+test.batch_size = 32
+
+
+                    
 ### dataset
 dataset = edict()
-
-dataset.DAY_NIGHT_CLS = {
-                            'set00': 1, 'set01': 1, 'set02': 1,
-                            'set03': 0, 'set04': 0, 'set05': 0,
-                            'set06': 1, 'set07': 1, 'set08': 1,
-                            'set09': 0, 'set10': 0, 'set11': 0,
-                        }
-
-dataset.OBJ_CLASSES = [ '__ignore__',   # Object with __backgroun__ label will be ignored.
-                      'person', 'cyclist', 'people', 'person?', 'unpaired']
-dataset.OBJ_IGNORE_CLASSES = [ 'cyclist', 'people', 'person?' , 'unpaired']
-
-# OBJ_CLS_TO_IDX = { cls:1 if cls =='person' or cls == 'cyclist' or cls == 'people' \
-#                     or cls == 'unpaired' else -1 for num, cls in enumerate(OBJ_CLASSES)}
-# dataset.OBJ_CLS_TO_IDX = { cls:1 if cls =='person' else -1 for num, cls in enumerate(OBJ_CLASSES)}
-
+dataset.workers = 0
 dataset.OBJ_LOAD_CONDITIONS = {    
                                   'train': {'hRng': (12, np.inf), 'xRng':(5, 635), 'yRng':(5, 507), 'wRng':(-np.inf, np.inf)}, 
                                   'test': {'hRng': (-np.inf, np.inf), 'xRng':(5, 635), 'yRng':(5, 507), 'wRng':(-np.inf, np.inf)}, 
                               }
 
-#### General
-dataset.IMAGE_MEAN = (0.3465,  0.3219,  0.2842)
-dataset.IMAGE_STD = (0.2358, 0.2265, 0.2274)
-
-dataset.LWIR_MEAN = (0.1598)
-dataset.LWIR_STD = (0.0813)
-
-# dataset.classInfo = namedtuple('TASK', 'detection')
-
-# dataset.tensor2image = Compose( [UnNormalize((0.3465,0.3219,0.2842), (0.2358,0.2265,0.2274)), ToPILImage('RGB'), Resize([512,640])])
-# dataset.tensor2lwir = Compose( [UnNormalize([0.1598], [0.0813]), ToPILImage('L'), Resize([512,640])])
 
 
-args = edict(dataset=dataset, path=path, eval=eval)
+# main
+args = edict(path=PATH,
+             train=train,
+             test=test,
+             dataset=dataset)
+
+args.device = torch.device(f"cuda" if torch.cuda.is_available() else "cpu")
+
+args.exp_time = None
+args.exp_name = None
+
+args.n_classes = 3 # BG, 
+
+args.upaired_augmentation = ["TT_RandomHorizontalFlip",
+                             "TT_FixedHorizontalFlip",
+                             "TT_RandomResizedCrop"]
+
+args["test"].img_transform = Compose([Resize(test.input_size)])    
+args["test"].co_transform = Compose([ToTensor(), \
+                                     Normalize(IMAGE_MEAN, IMAGE_STD, 'R'), \
+                                     Normalize(LWIR_MEAN, LWIR_STD, 'T')                        
+                                    ])
+
+args["train"].img_transform = Compose( [ColorJitter(0.3, 0.3, 0.3), 
+                                        ColorJitterLWIR(contrast=0.3)])
+args["train"].co_transform = Compose([TT_RandomHorizontalFlip(p=0.5, flip=0.5), 
+                                    TT_RandomResizedCrop([512,640], \
+                                                          scale=(0.25, 4.0), \
+                                                          ratio=(0.8, 1.2)), 
+                                    ToTensor(), \
+                                    Normalize( [0.3465,0.3219,0.2842], 
+                                                [0.2358,0.2265,0.2274], 'R'),
+                                    Normalize([0.1598], [0.0813], 'T')],
+                                    args=args)

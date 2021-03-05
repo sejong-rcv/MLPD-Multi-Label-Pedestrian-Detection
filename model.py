@@ -1,12 +1,16 @@
-from torch import nn
-from utils import *
-import torch.nn.functional as F
+import importlib, pdb
 from math import sqrt
 from itertools import product as product
-import torchvision
-import pdb
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+from torch import nn
+import torch.nn.functional as F
+import torchvision
+
+
+from utils import *
+
+args = importlib.import_module('config').args
+device = args.device
 
 
 class VGGBase(nn.Module):

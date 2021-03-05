@@ -1,16 +1,42 @@
-# create_data_lists.py VOC 리스트 툴 # 제거 
-# detect.py, image_to_video 시각화 툴 # 제거 고려 중
 
-# eval_coco.py COCO_Tool을 이용한 평가 방법 : 심플하게 한다면 제거 할 것
-# eval_for_matlab.py : 메인 평가. 트레인을 공개하지 않는다면 해당 방법만 사용해서 평가 고려 중. -> 추후 eval.py로 수정 할 것.
-# eval.py : printing만 하는 평가 코드 <-util.py의 calculate_mAP를 이용한 평가 방법. 심플하게 한다면 제거 할 것
+# 수정중
+## transforms.py pair=None 다 떼어 낼 것.
+- pair가 필요한 trasforms.. -> args.upaired_augmentation에서 정의함.
+  - TT_RandomHorizontalFlip
+  - TT_FixedHorizontalFlip
+  - TT_RandomResizedCrop
+  - config.py로 정리 완료함.
+- ~~train에서 사용하는 transfoms 함수에 모두 pair 인자가 적용된 상태~~
+  - args.upaired_augmentation 에 필요한 인자에만 적용되도록 변경.
+- SynthFail -> FusionDeadZone으로 변경하여 구성 및 원복 실험 예정.
+  - Blackout_{R, T}
+  - SidesBlackout_{R, T}
+  - SurroundingBlackout_{R, T}
 
-# model.py : main, torchcv 사용 x
+## model.py 
+ - 모델 파라미터도 config로 꺼내?
+ - 모델 구조 Modulelist로 변환??? 
 
+## utils.py : torchcv 사용 x
 
-# train_eval.py : main2,  torchcv -> datasets, utils, evaluation 사용함.
+## 추가로 할 작업.
+- 필요없는 torchcv 코드 정리.
 
-# utils.py : torchcv 사용 x
+# 수정 완료.
+## train_eval.py
+- 수정 완료.
+
+## eval.py
+- ~~3가지 eval 중 무엇으로 할지 선정할 것!~~
+  - COCO tool 기반의 evaluate_coco, Matlab 기반의 evaluate_matlab으로 구성함.
+- 코드 정리는 완료.
+- 논문 성능 7.58, 성능 원복이 가능한 checkpoint를 구해야할 듯. (MR 7.75????, checkpoint_ssd300.pth.tar024) 
+
+## dataset.py
+- transform : pair, ARCNN - train 종속 제거
+- Paired annotation : train 단일로 변경 완료.
+- test: santized??? original???
+- 글로벌 변수 정리 완료.
 
 
 
