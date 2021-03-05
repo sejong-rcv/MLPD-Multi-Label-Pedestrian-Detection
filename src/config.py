@@ -69,7 +69,7 @@ test.checkpoint = "./jobs/checkpoint_ssd300.pth.tar025"
 test.input_size = [512., 640.]
 
 ### test ~~ datasets config
-test.batch_size = 32
+test.batch_size = 48
 test.eval_batch_size = 1
 
                     
@@ -118,7 +118,7 @@ args["test"].co_transform = Compose([ToTensor(), \
                                      Normalize(LWIR_MEAN, LWIR_STD, 'T')                        
                                     ])
 ### FDZ_case : original, blackout_R, blackout_T, SidesBlackout_a, SidesBlackout_b, SurroundingBlackout
-FDZ = [FusionDeadZone(FDZ_case.original, tuple(test.input_size)) ]
+FDZ = [FusionDeadZone(FDZ_case.SurroundingBlackout, tuple(test.input_size)) ]
 args["test"].img_transform.add(FDZ)
 
 
