@@ -63,9 +63,9 @@ def evaluate_coco(test_loader, model, rstFile=None):
             
             # Detect objects in SSD output
             det_boxes_batch, det_labels_batch, det_scores_batch, det_bg_scores_batch = model.detect_objects(predicted_locs, predicted_scores,
-                                                                                       min_score=0.1, max_overlap=0.425,
+                                                                                       min_score=0.01, max_overlap=0.425,
                                                                                        top_k=50)
-            # Evaluation MUST be at min_score=0.01, max_overlap=0.45, top_k=200 for fair comparision with the paper's results and other repos
+    
             
             for box_t, label_t, score_t, bg_score_t, ids in zip(det_boxes_batch ,det_labels_batch, det_scores_batch, det_bg_scores_batch, index):
                 for box, label, score, bg_score in zip(box_t, label_t, score_t, bg_score_t) :
