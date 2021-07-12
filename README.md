@@ -12,7 +12,7 @@
 @INPROCEEDINGS{ IEEE RA-L with IROS2021
   author = {JIWON KIM*, HYEONGJUN KIM*, TAEJOO KIM*, NAMIL KIM, AND YUKYUNG CHOI†},
   title = {Multi-Label-Pedestrian-Detection},
-  booktitle = {Under Review},
+  booktitle = {IEEE Robotics and Automation Letters (RA-L). (Accepted. To Appear.)},
   year = {2021}
 }
 ```
