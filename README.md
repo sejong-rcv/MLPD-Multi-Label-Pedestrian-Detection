@@ -87,7 +87,7 @@ Download them and put them into the `./src/data/kaist-rgbt/`.
 
 ### Train
 
-`python train_eval.PY`
+`python train_eval.py`
 
 ### Evaluation
 
