@@ -20,10 +20,8 @@ train = edict()
 train.day = "all"
 train.img_set = f"train-{train.day}-02.txt"
 
-# Learning parameters
-# checkpoint = './jobs/2021-01-28_07h54m_SSD_KAIST_LF_Multi_Label/checkpoint_ssd300.pth.tar003'
+## Load chekpoint
 train.checkpoint = None
-train.checkpoint = './jobs/2021-03-05_11h38m_/checkpoint_ssd300.pth.tar003'
 
 train.batch_size = 6 # batch size
 

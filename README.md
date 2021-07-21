@@ -1,11 +1,13 @@
-# Multi-Label-Pedestrian-Detection Backup
+# Multi-Label-Pedestrian-Detection
 
-This code is based on [a-PyTorch-Tutorial-to-Object-Detection](https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Object-Detection). 
-
-![demo](./video.gif)
-
+## Abstract     
+Multispectral pedestrian detection has been actively studied as a promising multi-modality solution to handle illumination and weather changes. Most multi-modality approaches carry the assumption that all inputs are fully-overlapped. However, these kinds of data pairs are not common in practical applications due to the complexity of the existing sensor configuration. In this paper, we tackle multispectral pedestrian detection, where all input data are 
+not paired. To this end, we propose a novel single-stage detection framework that leverages multi-label learning to learn input state-aware features by assigning a separate label according to the given state of the input image pair. We also present a novel augmentation strategy
+by applying geometric transformations to synthesize the unpaired multispectral images. In extensive experiments, we demonstrate the efficacy of the proposed method under various real-world conditions, such as fully-overlapped images and partially-overlapped images, in stereo-vision.
 
 ### Paper : [Paper](./MLPD/MLPD.pdf)
+
+![demo](./video.gif)
 
 ## Contents
 
@@ -26,7 +28,7 @@ This code is based on [a-PyTorch-Tutorial-to-Object-Detection](https://github.co
 
 ## Pretrained Models
 
-추가 예정
+[Pretraibed Model](https://drive.google.com/file/d/1smXP4xpSDYC8cL_bbT9-E2aywROLlC2v/view?usp=sharing)
 
 ## Getting Started
 
