@@ -10,10 +10,10 @@ This code is based on [a-PyTorch-Tutorial-to-Object-Detection](https://github.co
 ## Contents
 
 - [Prerequisites](#Prerequisites)
-- [Pretrained Models](#Pretrained Models)
-- [Getting Started](#Getting Started)
+- [Pretrained Models](#Pretrained-Models)
+- [Getting Started](#Getting-Started)
 - [Dataset](#Dataset)
-- [Training and Evaluation](#Training and Evaluation)
+- [Training and Evaluation](#Training-and-Evaluation)
 
 ## Prerequisites
 
