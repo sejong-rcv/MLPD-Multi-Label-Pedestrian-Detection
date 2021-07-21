@@ -88,7 +88,7 @@ For Multispectral pedestrian detection, we train and test our model on the [KAIS
 `python train_eval.PY`
 
 ### Evaluation
-
+Download them and put them into the `./result/$pretrained_model$`.
 `python eval.py`
 
 
