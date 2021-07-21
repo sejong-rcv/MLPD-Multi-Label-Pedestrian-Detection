@@ -9,6 +9,11 @@
   - SidesBlackout_{R, L} R:right cutoff L:left cutoff
   - SurroundingBlackout
 
+  |         | all | day | night |
+  |--------|--|--|--|
+  |Blackout_R| 16.34 | 20.07 | 8.22 |
+  |Blackout_T| 23.95 | 16.88 | 39.37 |
+  
   |         | 논문 MR | 측정 MR |
   |--------|--|--|
   |Original| 7.58  | 7.58(mean) 8.07(max) |
