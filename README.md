@@ -1,22 +1,22 @@
 ## 수정중
 
 ## model.py 
- - Modulist 적용 예정
+ - Modulist 적용 예정 -- 굳이?
  
-## transforms.py pair=None 다 떼어 낼 것.
-- SynthFail -> FusionDeadZone으로 변경하여 구성 및 원복 실험 중.
+## transforms.py pair=None 완료
+- SynthFail -> FusionDeadZone으로 변경하여 구성 및 원복 실험 완료
   - Blackout
   - SidesBlackout_{R, L} R:right cutoff L:left cutoff
   - SurroundingBlackout
 
   |         | 논문 MR | 측정 MR |
   |--------|--|--|
-  |Original| 7.58  | 7.58 |
-  |Blackout_R| 16.34 | 16.26 |
-  |Blackout_T| 25.60 | 23.95 |
-  |streo_A| 21.56 | 23.03 |
-  |Streo_B| 15.40 | 17.31 |
-  |EOIR| 16.40 | 19.16 |
+  |Original| 7.58  | 7.58(mean) 8.07(max) |
+  |Blackout_R| 16.34 | 16.26(mean) 16.26(max) |
+  |Blackout_T| 25.60 | 23.95(mean) 23.94(max) |
+  |streo_A| 21.56 | 23.03(mean) 21.35(max) |
+  |Streo_B| 15.40 | 17.31(mean) 15.56(max) |
+  |EOIR| 16.40 | 19.16(mean) 16.68(max) |
 
 ## 수정 완료.
 ### train_eval.py
