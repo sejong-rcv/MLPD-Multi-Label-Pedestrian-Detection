@@ -27,7 +27,7 @@ by applying geometric transformations to synthesize the unpaired multispectral i
 - CUDA 10.1
 
 ## Pretrained Models
-Download them and put them into the `./result/$pretrained_model$`.
+Download them and put them into the `.src/result/`.
 
 - [Pretraibed Model](https://drive.google.com/file/d/1smXP4xpSDYC8cL_bbT9-E2aywROLlC2v/view?usp=sharing)
 
