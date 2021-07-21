@@ -91,6 +91,10 @@ For Multispectral pedestrian detection, we train and test our model on the [KAIS
 
 `python eval.py`
 
+
+## Acknowledgement
+We appreciate much the code [a-PyTorch-Tutorial-to-Object-Detection](https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Object-Detection) developed by [Soonmin Hwang](https://github.com/SoonminHwang). This code is built mostly based on it.
+
 ## Citation
 
 ```
@@ -101,3 +105,4 @@ For Multispectral pedestrian detection, we train and test our model on the [KAIS
   year = {2021}
 }
 ```
+
