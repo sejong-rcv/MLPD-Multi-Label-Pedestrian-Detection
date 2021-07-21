@@ -110,7 +110,7 @@ nvidia-docker run -it --name mlpd -p 8810:8810 -w /home/jwkim/workspace -v /home
 
 ### Dataset
 
-For Multispectral pedestrian detection, we train and test our model on [Multispectral Pedestrian Detection: Benchmark Dataset and Baselines](https://github.com/SoonminHwang/rgbt-ped-detection), you should firstly download the dataset. By default, we assume the dataset is stored in `./data/kaist-rgbt`. Please see details below
+For Multispectral pedestrian detection, we train and test our model on the [KAIST dataset](https://github.com/SoonminHwang/rgbt-ped-detection), you should first download the dataset. By default, we assume the dataset is stored in `./data/kaist-rgbt`. Please see details below
 
 ``` 
 <DATA_PATH>
