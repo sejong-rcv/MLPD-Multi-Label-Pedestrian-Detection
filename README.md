@@ -20,14 +20,12 @@ by applying geometric transformations to synthesize the unpaired multispectral i
 ## Prerequisites
 
 - Ubuntu 16.04/18.04
-
 - Python 3.6
 - Pytorch 1.6.0+ 
-
 - CUDA 10.1
 
 ## Pretrained Models
-Download them and put them into the `.src/result/`.
+Download them and put them into the `./src/result/`.
 
 - [Pretraibed Model](https://drive.google.com/file/d/1smXP4xpSDYC8cL_bbT9-E2aywROLlC2v/view?usp=sharing)
 
@@ -57,7 +55,10 @@ nvidia-docker run -it --name mlpd -p 8810:8810 -w /home/jwkim/workspace -v /home
 
 ## Dataset
 
-For Multispectral pedestrian detection, we train and test our model on the [KAIST dataset](https://github.com/SoonminHwang/rgbt-ped-detection), you should first download the dataset. By default, we assume the dataset is stored in `./data/kaist-rgbt`. Please see details below
+For Multispectral pedestrian detection, we train and test our model on the [KAIST dataset](https://github.com/SoonminHwang/rgbt-ped-detection), you should first download the dataset. By default, we assume the dataset is stored in `./src/data/kaist-rgbt`. Please see details below
+
+We trained from the KAIST-Paired Annotations provided by the [AR-CNN](https://github.com/luzhang16/AR-CNN).
+Download them and put them into the `./src/data/kaist-rgbt/`.
 
 ``` 
 <DATA_PATH>
