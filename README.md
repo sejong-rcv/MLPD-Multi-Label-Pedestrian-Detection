@@ -27,8 +27,9 @@ by applying geometric transformations to synthesize the unpaired multispectral i
 - CUDA 10.1
 
 ## Pretrained Models
+Download them and put them into the `./result/$pretrained_model$`.
 
-[Pretraibed Model](https://drive.google.com/file/d/1smXP4xpSDYC8cL_bbT9-E2aywROLlC2v/view?usp=sharing)
+- [Pretraibed Model](https://drive.google.com/file/d/1smXP4xpSDYC8cL_bbT9-E2aywROLlC2v/view?usp=sharing)
 
 ## Getting Started
 
@@ -88,7 +89,7 @@ For Multispectral pedestrian detection, we train and test our model on the [KAIS
 `python train_eval.PY`
 
 ### Evaluation
-Download them and put them into the `./result/$pretrained_model$`.
+
 `python eval.py`
 
 
