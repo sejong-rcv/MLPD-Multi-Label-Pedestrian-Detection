@@ -24,8 +24,8 @@ by applying geometric transformations to synthesize the unpaired multispectral i
 - Pytorch 1.6.0+ 
 - CUDA 10.1
 
-## Pretrained Models
-Download them and put them into the `./src/result/`.
+## Pretrained Model
+Download the pretrained model and place it in the directory `./src/result/`.
 
 - [Pretraibed Model](https://drive.google.com/file/d/1smXP4xpSDYC8cL_bbT9-E2aywROLlC2v/view?usp=sharing)
 
@@ -55,10 +55,10 @@ nvidia-docker run -it --name mlpd -p 8810:8810 -w /home/jwkim/workspace -v /home
 
 ## Dataset
 
-For Multispectral pedestrian detection, we train and test our model on the [KAIST dataset](https://github.com/SoonminHwang/rgbt-ped-detection), you should first download the dataset. By default, we assume the dataset is stored in `./src/data/kaist-rgbt`. Please see details below
+For Multispectral pedestrian detection, we train and test our model on the [KAIST dataset](https://github.com/SoonminHwang/rgbt-ped-detection), you should first download the dataset. By default, we assume the dataset is stored in `./src/data/kaist-rgbt`. Please see more details below.
 
-We trained from the KAIST-Paired Annotations provided by the [AR-CNN](https://github.com/luzhang16/AR-CNN).
-Download them and put them into the `./src/data/kaist-rgbt/`.
+We trained the model with Paired Annotations provided by [AR-CNN](https://github.com/luzhang16/AR-CNN).
+Download them and place them in the directory `./src/data/kaist-rgbt/`.
 
 ``` 
 <DATA_PATH>
@@ -95,7 +95,7 @@ Download them and put them into the `./src/data/kaist-rgbt/`.
 
 
 ## Acknowledgement
-We appreciate much the code [a-PyTorch-Tutorial-to-Object-Detection](https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Object-Detection) developed by [Soonmin Hwang](https://github.com/SoonminHwang). This code is built mostly based on it.
+We appreciate the provider of SSD code [a-PyTorch-Tutorial-to-Object-Detection](https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Object-Detection) and [Soonmin Hwang](https://github.com/SoonminHwang) who contributed to the proposed architecture. This code is built mostly based on them.
 
 ## Citation
 
