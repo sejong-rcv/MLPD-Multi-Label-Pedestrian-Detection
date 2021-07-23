@@ -19,9 +19,10 @@ by applying geometric transformations to synthesize the unpaired multispectral i
 
 ## Prerequisites
 
-- Ubuntu 16.04/18.04
-- Python 3.6
-- Pytorch 1.6.0+ 
+- Ubuntu 18.04
+- Python 3.7
+- Pytorch 1.6.0
+. Torchvision 0.7.0
 - CUDA 10.1
 
 ## Pretrained Model
