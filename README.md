@@ -22,7 +22,7 @@ by applying geometric transformations to synthesize the unpaired multispectral i
 - Ubuntu 18.04
 - Python 3.7
 - Pytorch 1.6.0
-. Torchvision 0.7.0
+- Torchvision 0.7.0
 - CUDA 10.1
 
 ## Pretrained Model
