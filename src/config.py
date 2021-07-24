@@ -12,13 +12,13 @@ from utils.transforms import *
 PATH = edict()
 
 PATH.DB_ROOT = '../data/kaist-rgbt/'
-PATH.JSON_GT_FILE = os.path.join( PATH.DB_ROOT, 'kaist_annotations_test20.json' )
+PATH.JSON_GT_FILE = os.path.join('kaist_annotations_test20.json' )
 
 # train
 train = edict()
 
 train.day = "all"
-train.img_set = f"train-{train.day}-02.txt"
+train.img_set = f"train-all-02.txt"
 
 train.checkpoint = None ## Load chekpoint
 

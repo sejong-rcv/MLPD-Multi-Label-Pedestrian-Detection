@@ -29,8 +29,6 @@ class KAISTPed(data.Dataset):
         condition (string, optional): load condition
             (default: 'Reasonabel')
     """
-
-    # def __init__(self, image_set, img_transform=None, co_transform=None, condition='train', annotation='KAIST'):
     def __init__(self, args, condition='train'):
         self.args = args
         assert condition in args.dataset.OBJ_LOAD_CONDITIONS
@@ -51,7 +49,7 @@ class KAISTPed(data.Dataset):
         self._imgpath = os.path.join('%s', 'images', '%s', '%s', '%s', '%s.jpg')  
         
         self.ids = list()
-        for line in open(os.path.join(self.args.path.DB_ROOT, 'imageSets', self.image_set)):
+        for line in open(os.path.join('./imageSets', self.image_set)):
             self.ids.append((self.args.path.DB_ROOT, line.strip().split('/')))
 
     def __str__(self):
