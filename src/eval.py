@@ -81,6 +81,7 @@ def evaluate_coco(test_loader, model, rstFile=None):
                                     'bbox': [bb[0]*input_size[1], bb[1]*input_size[0], (bb[2]-bb[0])*input_size[1], (bb[3]-bb[1])*input_size[0]], \
                                     'score': score.mean().item()} )
 
+    os.makedirs(args.test.result_path, exist_ok=True)
     if rstFile is None:
         rstFile = os.path.join(args.test.result_path, './original_TEST_det_{:s}.json'.format(args.test.day))         
     else:

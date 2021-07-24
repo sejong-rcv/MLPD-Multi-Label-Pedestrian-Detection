@@ -101,7 +101,7 @@ Download them and place them in the directory `./src/data/kaist-rgbt/`.
 
 | Methods | Train Modality |   AP  |
 |:-------:|:--------------:|:-----:|
-|   MLPD(ours)  |   RGB+Thermal  | 85.43 |
+|   MLPD(ours)  |   RGB+Thermal  | **85.43** |
 |   CSP   |       RGB      | 65.14 |
 |   CSP   |     Thermal    | 70.77 |
 |  YOLOv5 |       RGB      | 70.18 |
@@ -113,9 +113,24 @@ Download them and place them in the directory `./src/data/kaist-rgbt/`.
 The result of other studies (e.g. CSP, YOLO v3, YOLO v4, and YOLO-ACN) depending on
 train modality with respect to AP.
 
+### Ablation Study
+- Ablation experiments of proposed methods.
 
-## Acknowledgement
-We appreciate the provider of SSD code [a-PyTorch-Tutorial-to-Object-Detection](https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Object-Detection) and [Soonmin Hwang](https://github.com/SoonminHwang) who contributed to the proposed architecture. This code is built mostly based on them.
+| Fusion Method   | SUA | MLL | SMF |  Miss Rate (all/day/night)  | 
+|:---------------:|:---:|:---:|:---:|:-----------:| 
+|  Early fusion   |  -  |  -  |  -  | 11.21/13.41/6.54     |
+|  Early fusion   |  v  |  -  |  -  | 8.69/9.78/6.42            |
+|  Early fusion   |  v  |  v  |  -  | 7.77/8.95/**5.47**            |
+|  **Halfway fusion** |  v  |  v  |  v  | **7.58**/**7.95**/6.95            |
+
+
+- Qualitative result of the proposed method depending on the backbone network.
+
+| Methods | Backbone |  Miss rate  |   AP  |
+|:-------:|:--------------:|:-----:|:-----:| 
+|   MLPD(ours)  |  VGG-16 | **7.58** | 85.43 |
+|   MLPD(ours)  |   Resnet-50  | 7.61 | **85.45** |
+|   MLPD(ours)  |   Resnet-101  | 9.10 | 84.11 |
 
 ## Acknowledgement
 We appreciate the provider of SSD code [a-PyTorch-Tutorial-to-Object-Detection](https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Object-Detection) and [Soonmin Hwang](https://github.com/SoonminHwang) who contributed to the proposed architecture. This code is built mostly based on them.

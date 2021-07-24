@@ -11,7 +11,7 @@ from utils.transforms import *
 ### path
 PATH = edict()
 
-PATH.DB_ROOT = './data/kaist-rgbt/'
+PATH.DB_ROOT = '../data/kaist-rgbt/'
 PATH.JSON_GT_FILE = os.path.join( PATH.DB_ROOT, 'kaist_annotations_test20.json' )
 
 ### train
