@@ -3,3 +3,5 @@ src/datasets
 src/result/
 src/__pycache__
 src/utils/__pycache__
+src/best_checkpoint.pth.tar
+data/
