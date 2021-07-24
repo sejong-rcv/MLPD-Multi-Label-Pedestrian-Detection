@@ -91,7 +91,7 @@ If you want to change the parameter, you can change it at 'src/config.py'.
 If you want to evaluate right away without training, download the pre-learning model.
 Download the pretrained model and place it in the directory `./src/result/`.
 
-- [Pretraibed Model](https://drive.google.com/file/d/1smXP4xpSDYC8cL_bbT9-E2aywROLlC2v/view?usp=sharing)
+- [Pretrained Model](https://drive.google.com/file/d/1smXP4xpSDYC8cL_bbT9-E2aywROLlC2v/view?usp=sharing)
 
 ### Evaluation
 
@@ -109,16 +109,16 @@ If you want to check the results of the 'FDZ' experiment, you can run the file
 Test results on state-of-the-art models of RGB-based pedestrian detection benchmarks on KAIST datasets.
 The result of other studies (e.g. CSP, YOLO v3, YOLO v4, and YOLO-ACN) depending ontrain modality with respect to AP.
 
-| Methods | Modality |   AP  |
-|:-------:|:--------------:|:-----:|
-|   MLPD(ours)  |   RGB+Thermal  | **85.43** |
-|   [CSP](https://openaccess.thecvf.com/content_CVPR_2019/html/Liu_High-Level_Semantic_Feature_Detection_A_New_Perspective_for_Pedestrian_Detection_CVPR_2019_paper.html)   |       RGB      | 65.14 |
-|   [CSP](https://openaccess.thecvf.com/content_CVPR_2019/html/Liu_High-Level_Semantic_Feature_Detection_A_New_Perspective_for_Pedestrian_Detection_CVPR_2019_paper.html)   |     Thermal    | 70.77 |
-|  [YOLOv5](https://github.com/ultralytics/yolov5) |       RGB      | 70.18 |
-|  [YOLOv5](https://github.com/ultralytics/yolov5) |     Thermal    | 75.35 |
-|  [YOLOv4](https://arxiv.org/abs/2004.10934v1) |     Thermal    | 76.9 |
-|  [YOLOv3](https://arxiv.org/abs/1804.02767v1) |     Thermal    | 75.5  |
-|  [YOLO-ACN](https://ieeexplore.ieee.org/abstract/document/9303478) |     Thermal    | 76.2 |
+> | Methods | Modality |   AP  |
+> |:-------:|:--------------:|:-----:|
+> |   MLPD(ours)  |   RGB+Thermal  | **85.43** |
+>|   [CSP](https://openaccess.thecvf.com/content_CVPR_2019/html/Liu_High-Level_Semantic_Feature_Detection_A_New_Perspective_for_Pedestrian_Detection_CVPR_2019_paper.html)   |       RGB      | 65.14 |
+> |   [CSP](https://openaccess.thecvf.com/content_CVPR_2019/html/Liu_High-Level_Semantic_Feature_Detection_A_New_Perspective_for_Pedestrian_Detection_CVPR_2019_paper.html)   |     Thermal    | 70.77 |
+> |  [YOLOv5](https://github.com/ultralytics/yolov5) |       RGB      | 70.18 |
+> |  [YOLOv5](https://github.com/ultralytics/yolov5) |     Thermal    | 75.35 |
+> |  [YOLOv4](https://arxiv.org/abs/2004.10934v1) |     Thermal    | 76.9 |
+> |  [YOLOv3](https://arxiv.org/abs/1804.02767v1) |     Thermal    | 75.5  |
+> |  [YOLO-ACN](https://ieeexplore.ieee.org/abstract/document/9303478) |     Thermal    | 76.2 |
 
 
 ### Ablation Study
