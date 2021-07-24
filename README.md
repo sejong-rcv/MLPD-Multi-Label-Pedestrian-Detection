@@ -58,7 +58,7 @@ nvidia-docker run -it --name mlpd -v $PWD:/workspace -p 8888:8888 -e NVIDIA_VISI
 For multispectral pedestrian detection, we train and test the proposed model on the [KAIST dataset](https://github.com/SoonminHwang/rgbt-ped-detection), you should first download the dataset. By default, we assume the dataset is stored in `data/kaist-rgbt`. Please see more details below.
 
 We train the proposed model with paired annotations provided by [AR-CNN](https://github.com/luzhang16/AR-CNN).
-Download them and place them in the directory `data/kaist-rgbt/`.
+Download and place them in the directory `data/kaist-rgbt/`.
 
 ``` 
 <DATA_PATH>
