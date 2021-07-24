@@ -17,7 +17,7 @@ by applying geometric transformations to synthesize the unpaired multispectral i
 - [Dataset](#Dataset)
 - [Training and Evaluation](#Training-and-Evaluation)
   - [Train](#Train)
-  - [Pretrained Models](#Pretrained-Models)
+  - [Pretrained Model](#Pretrained-Model)
   - [Evaluation](#Evaluation)
   - [Fusion Dead Zone Experiment](#Fusion-Dead-Zone-Experiment)
 
