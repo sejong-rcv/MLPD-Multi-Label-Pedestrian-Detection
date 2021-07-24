@@ -12,10 +12,10 @@ by applying geometric transformations to synthesize the unpaired multispectral i
 ## Contents
 
 - [Prerequisites](#Prerequisites)
-- [Pretrained Models](#Pretrained-Models)
 - [Getting Started](#Getting-Started)
+  - [Training and Evaluation](#Training-and-Evaluation)
+  - [Pretrained Models](#Pretrained-Models)
 - [Dataset](#Dataset)
-- [Training and Evaluation](#Training-and-Evaluation)
 
 ## Prerequisites
 
@@ -25,21 +25,16 @@ by applying geometric transformations to synthesize the unpaired multispectral i
 - Torchvision 0.7.0
 - CUDA 10.1
 
-## Pretrained Model
-Download the pretrained model and place it in the directory `./src/result/`.
-
-- [Pretraibed Model](https://drive.google.com/file/d/1smXP4xpSDYC8cL_bbT9-E2aywROLlC2v/view?usp=sharing)
-
 ## Getting Started
 
-#### Git clone
+### Git clone
 
 ```
 git clone https://github.com/sejong-rcv/MLPD-Multi-Label-Pedestrian-Detection.git
 cd Multi-Lable-Pedestrian-Detection/docker
 ```
 
-#### Docker
+### Docker
 
 - Prerequisite
   - [nvidia-docker](https://github.com/NVIDIA/nvidia-docker)
@@ -86,13 +81,26 @@ Download them and place them in the directory `./src/data/kaist-rgbt/`.
 
 ## Training and Evaluation
 
+If you want to change the parameter, you can change it at 'src/config.py'.
+
 ### Train
 
 `python train_eval.py`
 
+### Pretrained Model
+If you want to evaluate right away without training, download the pre-learning model.
+Download the pretrained model and place it in the directory `./src/result/`.
+
+- [Pretraibed Model](https://drive.google.com/file/d/1smXP4xpSDYC8cL_bbT9-E2aywROLlC2v/view?usp=sharing)
+
 ### Evaluation
 
 `python eval.py`
+
+### Fusion Dead Zone Experiment
+If you want to check the results of the 'FDZ' experiment, you can run the file
+
+`sh FDZ_exp.sh`
 
 
 ## Experiment
