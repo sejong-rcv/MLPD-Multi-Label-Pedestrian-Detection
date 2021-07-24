@@ -1,5 +1,5 @@
 # MLPD: Multi-Label Pedestrian Detectorin Multispectral Domain
-### RA-L with IROS2021 accepted Paper
+### RA-L with IROS 2021 accepted Paper
 [MLPD: Multi-Label Pedestrian Detectorin Multispectral Domain](./MLPD/MLPD.pdf)
 
 ## Abstract     
