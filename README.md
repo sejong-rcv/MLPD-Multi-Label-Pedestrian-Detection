@@ -1,11 +1,11 @@
 # MLPD: Multi-Label Pedestrian Detectorin Multispectral Domain
+### RA-L with IROS2021 accepted Paper
+[MLPD: Multi-Label Pedestrian Detectorin Multispectral Domain](./MLPD/MLPD.pdf)
 
 ## Abstract     
 Multispectral pedestrian detection has been actively studied as a promising multi-modality solution to handle illumination and weather changes. Most multi-modality approaches carry the assumption that all inputs are fully-overlapped. However, these kinds of data pairs are not common in practical applications due to the complexity of the existing sensor configuration. In this paper, we tackle multispectral pedestrian detection, where all input data are 
 not paired. To this end, we propose a novel single-stage detection framework that leverages multi-label learning to learn input state-aware features by assigning a separate label according to the given state of the input image pair. We also present a novel augmentation strategy
 by applying geometric transformations to synthesize the unpaired multispectral images. In extensive experiments, we demonstrate the efficacy of the proposed method under various real-world conditions, such as fully-overlapped images and partially-overlapped images, in stereo-vision.
-
-### RA-L with IROS2021 accepted Paper : [MLPD: Multi-Label Pedestrian Detectorin Multispectral Domain](./MLPD/MLPD.pdf)
 
 ![demo](./video.gif)
 
@@ -31,7 +31,7 @@ by applying geometric transformations to synthesize the unpaired multispectral i
 
 ```
 git clone https://github.com/sejong-rcv/MLPD-Multi-Label-Pedestrian-Detection.git
-cd Multi-Lable-Pedestrian-Detection/docker
+cd MLPD-Multi-Label-Pedestrian-Detection (git 이름에 따라 수정 필요.)
 ```
 
 ### Docker
@@ -48,20 +48,22 @@ make docker-make
 
 ```
 cd ..
-nvidia-docker run -it --name mlpd -v $PWD:/workspace -p {your_port}:8888 -e NVIDIA_VISIBLE_DEVICES=all --shm-size=32G mlpd /bin/bash
+nvidia-docker run -it --name mlpd -v $PWD:/workspace -p 8888:8888 -e NVIDIA_VISIBLE_DEVICES=all --shm-size=8G mlpd /bin/bash
 ```
 
 
 ## Dataset
 
-For Multispectral pedestrian detection, we train and test our model on the [KAIST dataset](https://github.com/SoonminHwang/rgbt-ped-detection), you should first download the dataset. By default, we assume the dataset is stored in `./src/data/kaist-rgbt`. Please see more details below.
+For Multispectral pedestrian detection, we train and test our model on the [KAIST dataset](https://github.com/SoonminHwang/rgbt-ped-detection), you should first download the dataset. By default, we assume the dataset is stored in `data/kaist-rgbt`. Please see more details below.
 
 We trained the model with Paired Annotations provided by [AR-CNN](https://github.com/luzhang16/AR-CNN).
-Download them and place them in the directory `./src/data/kaist-rgbt/`.
+Download them and place them in the directory `data/kaist-rgbt/`.
 
 ``` 
 <DATA_PATH>
 
++-- docker
++-- src
 +-- data
 |   +-- kaist-rgbt
 |   |   +-- kaist_annotations_test20.json
@@ -84,7 +86,7 @@ Download them and place them in the directory `./src/data/kaist-rgbt/`.
 
 ## Training and Evaluation
 
-If you want to change the parameter, you can change it at 'src/config.py'.
+If you want to change the parameter, you can change it at `src/config.py`.
 
 ### Train
 ```
@@ -94,7 +96,7 @@ python train_eval.py
 
 ### Pretrained Model
 If you want to evaluate right away without training, download the pre-learning model.
-Download the pretrained model and place it in the directory `./src/jobs/`.
+Download the pretrained model and place it in the directory `src/jobs/`.
 
 - [Pretrained Model](https://drive.google.com/file/d/1smXP4xpSDYC8cL_bbT9-E2aywROLlC2v/view?usp=sharing)
 
