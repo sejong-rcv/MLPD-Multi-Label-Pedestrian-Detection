@@ -24,6 +24,7 @@ by applying geometric transformations to synthesize the unpaired multispectral i
 - Pytorch 1.6.0
 - Torchvision 0.7.0
 - CUDA 10.1
+- docker/requirements.txt
 
 ## Getting Started
 
@@ -31,7 +32,7 @@ by applying geometric transformations to synthesize the unpaired multispectral i
 
 ```
 git clone https://github.com/sejong-rcv/MLPD-Multi-Label-Pedestrian-Detection.git
-cd MLPD-Multi-Label-Pedestrian-Detection (git 이름에 따라 수정 필요.)
+cd MLPD-Multi-Label-Pedestrian-Detection
 ```
 
 ### Docker
