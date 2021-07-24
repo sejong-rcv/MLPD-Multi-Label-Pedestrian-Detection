@@ -28,7 +28,7 @@ by applying geometric transformations to synthesize the unpaired multispectral i
 
 ## Getting Started
 
-### Git clone
+### Git Clone
 
 ```
 git clone https://github.com/sejong-rcv/MLPD-Multi-Label-Pedestrian-Detection.git
@@ -55,9 +55,9 @@ nvidia-docker run -it --name mlpd -v $PWD:/workspace -p 8888:8888 -e NVIDIA_VISI
 
 ## Dataset
 
-For Multispectral pedestrian detection, we train and test our model on the [KAIST dataset](https://github.com/SoonminHwang/rgbt-ped-detection), you should first download the dataset. By default, we assume the dataset is stored in `data/kaist-rgbt`. Please see more details below.
+For multispectral pedestrian detection, we train and test the proposed model on the [KAIST dataset](https://github.com/SoonminHwang/rgbt-ped-detection), you should first download the dataset. By default, we assume the dataset is stored in `data/kaist-rgbt`. Please see more details below.
 
-We trained the model with Paired Annotations provided by [AR-CNN](https://github.com/luzhang16/AR-CNN).
+We train the proposed model with paired annotations provided by [AR-CNN](https://github.com/luzhang16/AR-CNN).
 Download them and place them in the directory `data/kaist-rgbt/`.
 
 ``` 
@@ -87,37 +87,35 @@ Download them and place them in the directory `data/kaist-rgbt/`.
 
 ## Training and Evaluation
 
-If you want to change the parameter, you can change it at `src/config.py`.
+If you want to change default parameters, you can modify them in the module `src/config.py`.
 
 ### Train
+Please, refer to the following code to train and evaluate the proposed model.
 ```
 cd src
 python train_eval.py
 ```
 
 ### Pretrained Model
-If you want to evaluate right away without training, download the pre-learning model.
-Download the pretrained model and place it in the directory `src/jobs/`.
+If you want to skip the training process, download the pre-trained model and place it in the directory `src/jobs/`.
 
 - [Pretrained Model](https://drive.google.com/file/d/1smXP4xpSDYC8cL_bbT9-E2aywROLlC2v/view?usp=sharing)
 
 ### Evaluation
-
 `python eval.py`
 
 ### Fusion Dead Zone Experiment
-If you want to check the results of the 'FDZ' experiment, you can run the file
+If you want to check the results of the 'FDZ' experiments, you can run the file
 
 `sh FDZ_exp.sh`
 
 
 ## Additional Experiments
+*These additional expriments are not handled in the submitted manuscript.*
 
-*Refer to the paper for the main experiment.*
-
-### Compare to SOTA RGB-based object detection on KAIST dataset
-Test results on state-of-the-art models of RGB-based pedestrian detection benchmarks on KAIST datasets.
-The result of other studies (e.g. CSP, YOLO v3, YOLO v4, and YOLO-ACN) depending ontrain modality with respect to AP.
+### Experimental Results Compare to RGB-based SOTA object detection methods on the KAIST dataset
+Test results on state-of-the-art models of RGB-based pedestrian detection benchmarks on the KAIST dataset.
+The result of other studies (e.g. CSP, YOLO v3, YOLO v4, and YOLO-ACN) depending on train modality with respect to AP.
 
 > | Methods | Modality |   AP  |
 > |:-------:|:--------------:|:-----:|
@@ -134,7 +132,7 @@ The result of other studies (e.g. CSP, YOLO v3, YOLO v4, and YOLO-ACN) depending
 ### Ablation Study
 Additional ablation experiments of the proposed method.
 
-- Ablation Study on fusion method.
+- Ablation Study on Fusion Method.
 >
 >| Fusion Method   | SUA | MLL | SMF |  Miss Rate (all/day/night)  | 
 >|:---------------:|:---:|:---:|:---:|:-----------:| 
@@ -144,10 +142,10 @@ Additional ablation experiments of the proposed method.
 >|  **Halfway fusion** |  v  |  v  |  v  | **7.58**/**7.95**/6.95            |
 >
 > SUA : Semi-Unpaired Augmentation,
-> MLL : Multi-Label- Learning, 
+> MLL : Multi-Label Learning, 
 > SMF : Shared Multi-Fusion
 
-- Qualitative result of the proposed method depending on the backbone network.
+- Quantitative result of the proposed method depending on the backbone network.
 
 > | Methods | Backbone |  Miss rate  |   AP  |
 > |:-------:|:--------------:|:-----:|:-----:| 
