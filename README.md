@@ -115,6 +115,7 @@ If you want to check the results of the 'FDZ' experiments, you can run the file
 
 ### Experimental Results Compare to RGB-based SOTA object detection methods on the KAIST dataset
 Test results on state-of-the-art models of RGB-based pedestrian detection benchmarks on the KAIST dataset.
+
 The result of other studies (e.g. CSP, YOLO v3, YOLO v4, and YOLO-ACN) depending on train modality with respect to AP.
 
 > | Methods | Modality |   AP  |
@@ -132,7 +133,7 @@ The result of other studies (e.g. CSP, YOLO v3, YOLO v4, and YOLO-ACN) depending
 ### Ablation Study
 Additional ablation experiments of the proposed method.
 
-- Ablation Study on Fusion Method.
+- Ablation Study on Fusion Methods.
 >
 >| Fusion Method   | SUA | MLL | SMF |  Miss Rate (all/day/night)  | 
 >|:---------------:|:---:|:---:|:---:|:-----------:| 
@@ -145,7 +146,7 @@ Additional ablation experiments of the proposed method.
 > MLL : Multi-Label Learning, 
 > SMF : Shared Multi-Fusion
 
-- Quantitative result of the proposed method depending on the backbone network.
+- Quantitative Result of the Proposed Method Depending on the Backbone Network.
 
 > | Methods | Backbone |  Miss rate  |   AP  |
 > |:-------:|:--------------:|:-----:|:-----:| 
