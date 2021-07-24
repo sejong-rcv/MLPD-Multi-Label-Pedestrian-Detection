@@ -105,7 +105,9 @@ If you want to check the results of the 'FDZ' experiment, you can run the file
 
 ## Additional Experiments
 
-### Compare to SOTA RGB-based object detection
+*Refer to the paper for the main experiment.*
+
+### Compare to SOTA RGB-based object detection on KAIST dataset
 Test results on state-of-the-art models of RGB-based pedestrian detection benchmarks on KAIST datasets.
 The result of other studies (e.g. CSP, YOLO v3, YOLO v4, and YOLO-ACN) depending ontrain modality with respect to AP.
 
@@ -123,8 +125,6 @@ The result of other studies (e.g. CSP, YOLO v3, YOLO v4, and YOLO-ACN) depending
 
 ### Ablation Study
 Additional ablation experiments of the proposed method.
-
-*Refer to the paper for the main experiment.*
 
 - Ablation Study on fusion method.
 >
