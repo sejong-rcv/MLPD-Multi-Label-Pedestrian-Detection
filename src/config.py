@@ -8,20 +8,19 @@ import numpy as np
 from utils.transforms import *
 
 
-### path
+# Dataset path
 PATH = edict()
 
 PATH.DB_ROOT = '../data/kaist-rgbt/'
 PATH.JSON_GT_FILE = os.path.join( PATH.DB_ROOT, 'kaist_annotations_test20.json' )
 
-### train
+# train
 train = edict()
 
 train.day = "all"
 train.img_set = f"train-{train.day}-02.txt"
 
-## Load chekpoint
-train.checkpoint = None
+train.checkpoint = None ## Load chekpoint
 
 train.batch_size = 6 # batch size
 
@@ -35,7 +34,7 @@ train.momentum = 0.9  # momentum
 train.weight_decay = 5e-4  # weight decay
 train.grad_clip = None  # clip if gradients are exploding, which may happen at larger batch sizes (sometimes at 32) - you will recognize it by a sorting error in the MuliBox loss calculation
 
-train.print_freq=10
+train.print_freq = 10
 
 train.annotation = "AR-CNN" # AR-CNN, Sanitize, Original 
 
@@ -43,11 +42,10 @@ train.annotation = "AR-CNN" # AR-CNN, Sanitize, Original
 
 
 
-## test & eval
+# test & eval
 test = edict()
 
-### coco tool. 
-test.result_path = './result'
+test.result_path = './result' ### coco tool. Save Results(jpg & json) Path
 
 test.day = "all" # all, day, night
 test.img_set = f"test-{test.day}-20.txt"
@@ -64,15 +62,16 @@ test.batch_size = 4
 test.eval_batch_size = 1
 
 
-#### KAIST Image Mean & STD
+# KAIST Image Mean & STD
+## RGB
 IMAGE_MEAN = [0.3465,  0.3219,  0.2842]
 IMAGE_STD = [0.2358, 0.2265, 0.2274]
-
+## Lwir
 LWIR_MEAN = [0.1598]
 LWIR_STD = [0.0813]
 
                     
-### dataset
+# dataset
 dataset = edict()
 dataset.workers = 8
 dataset.OBJ_LOAD_CONDITIONS = {    
@@ -80,6 +79,8 @@ dataset.OBJ_LOAD_CONDITIONS = {
                                   'test': {'hRng': (-np.inf, np.inf), 'xRng':(5, 635), 'yRng':(5, 507), 'wRng':(-np.inf, np.inf)}, 
                               }
 
+
+# Fusion Dead Zone
 '''
 Fusion Dead Zone
 The input image of the KAIST dataset is input in order of [RGB, thermal].
@@ -112,9 +113,7 @@ args.exp_name = None
 
 args.n_classes = 3
 
-
-
-### Semi Unpaired Augmentation
+## Semi Unpaired Augmentation
 args.upaired_augmentation = ["TT_RandomHorizontalFlip",
                              "TT_FixedHorizontalFlip",
                              "TT_RandomResizedCrop"]
@@ -137,8 +136,3 @@ args["test"].co_transform = Compose([Resize(test.input_size), \
                                      Normalize(IMAGE_MEAN, IMAGE_STD, 'R'), \
                                      Normalize(LWIR_MEAN, LWIR_STD, 'T')                        
                                     ])
-# ### FDZ_case : original, blackout_R, blackout_T, SidesBlackout_a, SidesBlackout_b, SurroundingBlackout
-# FDZ = [FusionDeadZone(FDZ_case.blackout_R, tuple(test.input_size)) ]
-# args["test"].img_transform.add(FDZ)
-
-

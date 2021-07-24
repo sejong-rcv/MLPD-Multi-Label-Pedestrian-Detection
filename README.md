@@ -1,11 +1,11 @@
-# Multi-Label-Pedestrian-Detection
+# MLPD: Multi-Label Pedestrian Detectorin Multispectral Domain
 
 ## Abstract     
 Multispectral pedestrian detection has been actively studied as a promising multi-modality solution to handle illumination and weather changes. Most multi-modality approaches carry the assumption that all inputs are fully-overlapped. However, these kinds of data pairs are not common in practical applications due to the complexity of the existing sensor configuration. In this paper, we tackle multispectral pedestrian detection, where all input data are 
 not paired. To this end, we propose a novel single-stage detection framework that leverages multi-label learning to learn input state-aware features by assigning a separate label according to the given state of the input image pair. We also present a novel augmentation strategy
 by applying geometric transformations to synthesize the unpaired multispectral images. In extensive experiments, we demonstrate the efficacy of the proposed method under various real-world conditions, such as fully-overlapped images and partially-overlapped images, in stereo-vision.
 
-### Paper : [Paper](./MLPD/MLPD.pdf)
+### RA-L with IROS2021 accepted Paper : [MLPD: Multi-Label Pedestrian Detectorin Multispectral Domain](./MLPD/MLPD.pdf)
 
 ![demo](./video.gif)
 
@@ -40,14 +40,17 @@ cd Multi-Lable-Pedestrian-Detection/docker
   - [nvidia-docker](https://github.com/NVIDIA/nvidia-docker)
 
 ```
+cd docker
 make docker-make
 ```
 
-#### Make Contianer (example)
+#### Make Contianer
 
 ```
-nvidia-docker run -it --name mlpd -p 8810:8810 -w /home/jwkim/workspace -v /home/jwkim/workspace:/home/jwkim/workspace -v /data/:/raid -e NVIDIA_VISIBLE_DEVICES=ALL --shm-size=32G mlpd /bin/bash
+cd ..
+nvidia-docker run -it --name mlpd -v $PWD:/workspace -p {your_port}:8888 -e NVIDIA_VISIBLE_DEVICES=all --shm-size=32G mlpd /bin/bash
 ```
+
 
 ## Dataset
 
@@ -84,12 +87,14 @@ Download them and place them in the directory `./src/data/kaist-rgbt/`.
 If you want to change the parameter, you can change it at 'src/config.py'.
 
 ### Train
-
-`python train_eval.py`
+```
+cd src
+python train_eval.py
+```
 
 ### Pretrained Model
 If you want to evaluate right away without training, download the pre-learning model.
-Download the pretrained model and place it in the directory `./src/result/`.
+Download the pretrained model and place it in the directory `./src/jobs/`.
 
 - [Pretrained Model](https://drive.google.com/file/d/1smXP4xpSDYC8cL_bbT9-E2aywROLlC2v/view?usp=sharing)
 
