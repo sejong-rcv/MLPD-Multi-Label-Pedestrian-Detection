@@ -3,7 +3,8 @@ import sys, os, argparse, json, pdb, time, importlib
 from tqdm import tqdm
 
 import torch
-import numpy as np
+import torch.nn as nn
+
 import matplotlib.pyplot as plt
 from PIL import Image
 
@@ -14,6 +15,8 @@ from datasets import KAISTPed, LoadBox
 from utils.coco import COCO
 from utils.eval_MR_multisetup import COCOeval
 from utils.utils import *
+
+from utils.transforms import FusionDeadZone
 
 ### config
 import config
@@ -62,8 +65,8 @@ def evaluate_coco(test_loader, model, rstFile=None):
             data_time.update(time.time() - start)
             
             # Detect objects in SSD output
-            det_boxes_batch, det_labels_batch, det_scores_batch, det_bg_scores_batch = model.detect_objects(predicted_locs, predicted_scores,
-                                                                                       min_score=0.01, max_overlap=0.425,
+            det_boxes_batch, det_labels_batch, det_scores_batch, det_bg_scores_batch = model.module.detect_objects(predicted_locs, predicted_scores,
+                                                                                       min_score=0.1, max_overlap=0.425,
                                                                                        top_k=50)
     
             
@@ -71,7 +74,7 @@ def evaluate_coco(test_loader, model, rstFile=None):
                 for box, label, score, bg_score in zip(box_t, label_t, score_t, bg_score_t) :
     
                     bb = box.cpu().numpy().tolist()
-
+                    
                     results.append( {\
                                     'image_id': ids.item(), \
                                     'category_id': label.item(), \
@@ -79,7 +82,9 @@ def evaluate_coco(test_loader, model, rstFile=None):
                                     'score': score.mean().item()} )
 
     if rstFile is None:
-        rstFile = os.path.join(args.test.result_path, './COCO_TEST_det_{:s}.json'.format(args.test.day))         
+        rstFile = os.path.join(args.test.result_path, './original_TEST_det_{:s}.json'.format(args.test.day))         
+    else:
+        rstFile=rstFile + f'_{args.test.day}.json'
     write_coco_format(results, rstFile)
 
     try:
@@ -87,11 +92,12 @@ def evaluate_coco(test_loader, model, rstFile=None):
         cocoDt = cocoGt.loadRes(rstFile)
         imgIds = sorted(cocoGt.getImgIds())
         cocoEval = COCOeval(cocoGt, cocoDt, 'bbox')
-        cocoEval.params.imgIds  = imgIds
         cocoEval.params.catIds  = [1]    
+        
+        cocoEval.params.imgIds  = imgIds
         cocoEval.evaluate(0)
         cocoEval.accumulate()
-        curPerf = cocoEval.summarize(0)    
+        curPerf = cocoEval.summarize(0)     
 
         cocoEval.draw_figure(ax_test, rstFile.replace('json', 'jpg'))        
         
@@ -102,7 +108,7 @@ def evaluate_coco(test_loader, model, rstFile=None):
         import utils.trace_error
         print('[Error] cannot evaluate by cocoEval. ')
 
-def evaluate_matlab(test_loader, model):
+def evaluate_matlab(test_loader, model, file_name):
     """
     Evaluate.
 
@@ -130,7 +136,8 @@ def evaluate_matlab(test_loader, model):
 
     with torch.no_grad():
         
-        file_name = os.path.join(anno_save, f'det-test-{args.test.day}')
+        if file_name is None:
+            file_name = os.path.join(anno_save, f'det-test-{args.test.day}')
         f = open(file_name, 'w')
 
         for i, (image_vis, image_lwir, boxes, labels, index) in enumerate(tqdm(test_loader, desc='Evaluating')):
@@ -145,7 +152,6 @@ def evaluate_matlab(test_loader, model):
             det_boxes_batch, det_labels_batch, det_scores_batch, det_bg_scores_batch = model.detect_objects(predicted_locs, predicted_scores,
                                                                                        min_score=0.1, max_overlap=0.45,
                                                                                        top_k=200)
-            # Evaluation MUST be at min_score=0.01, max_overlap=0.45, top_k=200 for fair comparision with the paper's results and other repos
 
             for box_t, label_t, score_t, ids in zip(det_boxes_batch ,det_labels_batch, det_scores_batch, index):
         
@@ -167,13 +173,37 @@ def evaluate_matlab(test_loader, model):
 
 if __name__ == '__main__':
 
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    
+    parser.add_argument('--FDZ', default='original',  type=str,
+                        help='Setting for the "Fusion Dead Zone" experiment. e.g. original, blackout_R, blackout_T, SidesBlackout_a, SidesBlackout_b, SurroundingBlackout')
+
+    FDZ_CASE = parser.parse_args().FDZ.lower()
+
+    FDZ_list = ['original', 'blackout_r', 'blackout_t', 'sidesblackout_a', 'sidesblackout_b', 'surroundingblackout']
+
     test = args.test
+    
+    if FDZ_CASE not in FDZ_list:
+        raise NameError(f'{FDZ_CASE} is not support')
+    elif FDZ_CASE is not 'original':
+        print(f'Experiment {FDZ_CASE}')
+        rstFile = f'{test.result_path}/{FDZ_CASE}_TEST_det'
+    else:
+        rstFile = None # original
 
     # Load model checkpoint that is to be evaluated
     checkpoint = torch.load(test.checkpoint)
     model = checkpoint['model']
     model = model.to(args.device)
+
+    model = nn.DataParallel(model)
+
     model.eval()
+
+    # Fusion Dead Zone experiment
+    FDZ = [FusionDeadZone(args.FDZ_case[FDZ_CASE], tuple(test.input_size)) ]
+    test.img_transform.add(FDZ)
 
     test_dataset = KAISTPed(args, condition="test")
 
@@ -183,4 +213,4 @@ if __name__ == '__main__':
                                                 pin_memory=True)     
 
 
-    evaluate_coco(test_loader, model)
+    evaluate_coco(test_loader, model, rstFile)

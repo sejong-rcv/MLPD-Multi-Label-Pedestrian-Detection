@@ -3,10 +3,11 @@ import sys, os, pdb, time, json, importlib
 from tqdm import tqdm
 
 import torch
+import torch.nn as nn
 import numpy as np
 from PIL import Image
 
-### Model
+### Model4
 from model import SSD300, MultiBoxLoss
 
 ### Dataset
@@ -68,8 +69,11 @@ def main():
         optim_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[ int(epochs*0.5)], gamma=0.1)
 
     # Move to default device
+
+    model = nn.DataParallel(model)
+
     model = model.to(args.device)
-    criterion = MultiBoxLoss(priors_cxcy=model.priors_cxcy).to(args.device)
+    criterion = MultiBoxLoss(priors_cxcy=model.module.priors_cxcy).to(device)
 
     train_dataset = KAISTPed(args, condition='train')
         
@@ -126,12 +130,15 @@ def main():
         optim_scheduler.step()
         
         # Save checkpoint
-        save_checkpoint(epoch, model, optimizer, train_loss, jobs_dir)
+        save_checkpoint(epoch, model.module, optimizer, train_loss, jobs_dir)
         
         if epoch >= 3 :
             rstFile = os.path.join(jobs_dir, './COCO_TEST_det_{:d}.json'.format(epoch)) 
-            
-            evaluate_coco(test_loader, model, rstFile=rstFile)
+            # import pdb;pdb.set_trace()
+            try:
+                evaluate_coco(test_loader, model, rstFile=rstFile)
+            except:
+                import pdb;pdb.set_trace()
         
 
 def train(args, train_loader, model, criterion, optimizer, epoch, logger):
@@ -144,7 +151,7 @@ def train(args, train_loader, model, criterion, optimizer, epoch, logger):
     :param optimizer: optimizer
     :param epoch: epoch number
     """
-    model.train()  # training mode enables dropout
+    model.module.train()  # training mode enables dropout
 
     batch_time = AverageMeter()  # forward prop. + back prop. time
     data_time = AverageMeter()  # data loading time

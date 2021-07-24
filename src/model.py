@@ -17,7 +17,6 @@ class VGGBase(nn.Module):
     """
     VGG base convolutions to produce lower-level feature maps.
     """
-
     def __init__(self):
         super(VGGBase, self).__init__()
 
@@ -140,14 +139,6 @@ class VGGBase(nn.Module):
         self.feat_6 = nn.Conv2d(1024, 512, kernel_size=3, stride=1, padding=1, bias=False)
         self.feat_6_bn = nn.BatchNorm2d(512, momentum=0.01)
         
-        # self.feat_1 = nn.Conv2d(1024, 512, kernel_size=1)
-        # self.feat_2 = nn.Conv2d(1024, 512, kernel_size=1)
-        # self.feat_3 = nn.Conv2d(1024, 512, kernel_size=1)
-        # self.feat_4 = nn.Conv2d(1024, 512, kernel_size=1)
-        # self.feat_5 = nn.Conv2d(1024, 512, kernel_size=1)
-        # self.feat_6 = nn.Conv2d(1024, 512, kernel_size=1)
-
-        # Since lower level features (conv4_3_feats) have considerably larger scales, we take the L2 norm and rescale
         # Rescale factor is initially set at 20, but is learned for each channel during back-prop
         self.rescale_factors = nn.Parameter(torch.FloatTensor(1, 512, 1, 1))  # there are 512 channels in conv4_3_feats
         nn.init.constant_(self.rescale_factors, 20)
@@ -208,14 +199,13 @@ class VGGBase(nn.Module):
 
         conv4_3_feats = torch.cat([out_vis, out_lwir], dim=1)
         conv4_3_feats = F.relu(self.feat_1_bn(self.feat_1(conv4_3_feats)))
-        # conv4_3_feats = F.relu(self.feat_1(conv4_3_feats))
 
         #########################################################################
         
         # Rescale conv4_3 after L2 norm
-        norm = conv4_3_feats.pow(2).sum(dim=1, keepdim=True).sqrt()  # (N, 1, 38, 38)
-        conv4_3_feats = conv4_3_feats / norm  # (N, 512, 38, 38)
-        conv4_3_feats = conv4_3_feats * self.rescale_factors  # (N, 512, 38, 38)
+        norm = conv4_3_feats.pow(2).sum(dim=1, keepdim=True).sqrt()
+        conv4_3_feats = conv4_3_feats / norm
+        conv4_3_feats = conv4_3_feats * self.rescale_factors
 
         out_vis = F.relu(self.conv5_1_bn(self.conv5_1(out_vis))) 
         out_vis = F.relu(self.conv5_2_bn(self.conv5_2(out_vis))) 
@@ -230,11 +220,11 @@ class VGGBase(nn.Module):
         out_vis = F.relu(self.conv6_2(out_vis))
         out_lwir = F.relu(self.conv6_1_bn(self.conv6_1(out_lwir))) 
         out_lwir = F.relu(self.conv6_2(out_lwir))
+
         #########################################################################
 
         conv6_feats = torch.cat([out_vis, out_lwir], dim=1)
         conv6_feats = F.relu(self.feat_2_bn(self.feat_2(conv6_feats)))
-        # conv6_feats = F.relu(self.feat_2(conv6_feats))
 
         #########################################################################
 
@@ -247,7 +237,6 @@ class VGGBase(nn.Module):
 
         conv7_feats = torch.cat([out_vis, out_lwir], dim=1)
         conv7_feats = F.relu(self.feat_3_bn(self.feat_3(conv7_feats)))
-        # conv7_feats = F.relu(self.feat_3(conv7_feats))
 
         ######################################################################### 
 
@@ -260,7 +249,6 @@ class VGGBase(nn.Module):
 
         conv8_feats = torch.cat([out_vis, out_lwir], dim=1)
         conv8_feats = F.relu(self.feat_4_bn(self.feat_4(conv8_feats)))
-        # conv8_feats = F.relu(self.feat_4(conv8_feats))
 
         ######################################################################### 
 
@@ -273,7 +261,6 @@ class VGGBase(nn.Module):
 
         conv9_feats = torch.cat([out_vis, out_lwir], dim=1)
         conv9_feats = F.relu(self.feat_5_bn(self.feat_5(conv9_feats)))
-        # conv9_feats = F.relu(self.feat_5(conv9_feats))
 
         ######################################################################### 
 
@@ -287,7 +274,6 @@ class VGGBase(nn.Module):
 
         conv10_feats = torch.cat([out_vis, out_lwir], dim=1)
         conv10_feats = F.relu(self.feat_6_bn(self.feat_6(conv10_feats)))
-        # conv10_feats = F.relu(self.feat_6(conv10_feats))
 
         ######################################################################### 
 
@@ -385,81 +371,68 @@ class PredictionConvolutions(nn.Module):
                 nn.init.xavier_uniform_(c.weight)
                 nn.init.constant_(c.bias, 0.)
 
-    # def forward(self, conv4_3_feats, conv7_feats, conv8_2_feats, conv9_2_feats, conv10_2_feats, conv11_2_feats):
+
     def forward(self, conv4_3_feats, conv6_feats, conv7_feats, conv8_feats, conv9_feats, conv10_feats):
-        """
-        Forward propagation.
-
-        :param conv4_3_feats: conv4_3 feature map, a tensor of dimensions (N, 512, 38, 38)
-        :param conv7_feats: conv7 feature map, a tensor of dimensions (N, 1024, 19, 19)
-        :param conv8_1_feats: conv8_1 feature map, a tensor of dimensions (N, 512, 10, 10)
-        :param conv9_1_feats: conv9_1 feature map, a tensor of dimensions (N, 256, 5, 5)
-        :param conv10_1_feats: conv10_1 feature map, a tensor of dimensions (N, 256, 3, 3)
-        :param conv11_1_feats: conv11_2 feature map, a tensor of dimensions (N, 256, 1, 1)
-        :return: 8732 locations and class scores (i.e. w.r.t each prior box) for each image
-        """
-
 
         batch_size = conv4_3_feats.size(0)
 
         # Predict localization boxes' bounds (as offsets w.r.t prior-boxes)
-        l_conv4_3 = self.loc_conv4_3(conv4_3_feats)  # (N, 16, 38, 38)
-        l_conv4_3 = l_conv4_3.permute(0, 2, 3, 1).contiguous()  # (N, 38, 38, 16), to match prior-box order (after .view())
+        l_conv4_3 = self.loc_conv4_3(conv4_3_feats)
+        l_conv4_3 = l_conv4_3.permute(0, 2, 3, 1).contiguous()
         # (.contiguous() ensures it is stored in a contiguous chunk of memory, needed for .view() below)
-        l_conv4_3 = l_conv4_3.view(batch_size, -1, 4)  # (N, 5776, 4), there are a total 5776 boxes on this feature map
+        l_conv4_3 = l_conv4_3.view(batch_size, -1, 4)
 
-        l_conv6 = self.loc_conv6(conv6_feats)  # (N, 24, 19, 19)
-        l_conv6 = l_conv6.permute(0, 2, 3, 1).contiguous()  # (N, 19, 19, 24)
-        l_conv6 = l_conv6.view(batch_size, -1, 4)  # (N, 2166, 4), there are a total 2116 boxes on this feature map
+        l_conv6 = self.loc_conv6(conv6_feats)
+        l_conv6 = l_conv6.permute(0, 2, 3, 1).contiguous()
+        l_conv6 = l_conv6.view(batch_size, -1, 4)
 
-        l_conv7 = self.loc_conv7(conv7_feats)  # (N, 24, 19, 19)
-        l_conv7 = l_conv7.permute(0, 2, 3, 1).contiguous()  # (N, 19, 19, 24)
-        l_conv7 = l_conv7.view(batch_size, -1, 4)  # (N, 2166, 4), there are a total 2116 boxes on this feature map
+        l_conv7 = self.loc_conv7(conv7_feats)
+        l_conv7 = l_conv7.permute(0, 2, 3, 1).contiguous()
+        l_conv7 = l_conv7.view(batch_size, -1, 4)
 
-        l_conv8 = self.loc_conv8(conv8_feats)  # (N, 24, 10, 10)
-        l_conv8 = l_conv8.permute(0, 2, 3, 1).contiguous()  # (N, 10, 10, 24)
-        l_conv8 = l_conv8.view(batch_size, -1, 4)  # (N, 600, 4)
+        l_conv8 = self.loc_conv8(conv8_feats)
+        l_conv8 = l_conv8.permute(0, 2, 3, 1).contiguous()
+        l_conv8 = l_conv8.view(batch_size, -1, 4)
 
-        l_conv9 = self.loc_conv9(conv9_feats)  # (N, 24, 5, 5)
-        l_conv9 = l_conv9.permute(0, 2, 3, 1).contiguous()  # (N, 5, 5, 24)
-        l_conv9 = l_conv9.view(batch_size, -1, 4)  # (N, 150, 4)
+        l_conv9 = self.loc_conv9(conv9_feats)
+        l_conv9 = l_conv9.permute(0, 2, 3, 1).contiguous()
+        l_conv9 = l_conv9.view(batch_size, -1, 4)
 
-        l_conv10 = self.loc_conv10(conv10_feats)  # (N, 16, 3, 3)
-        l_conv10 = l_conv10.permute(0, 2, 3, 1).contiguous()  # (N, 3, 3, 16)
-        l_conv10 = l_conv10.view(batch_size, -1, 4)  # (N, 36, 4)
+        l_conv10 = self.loc_conv10(conv10_feats)
+        l_conv10 = l_conv10.permute(0, 2, 3, 1).contiguous()
+        l_conv10 = l_conv10.view(batch_size, -1, 4)
 
         # Predict classes in localization boxes
-        c_conv4_3 = self.cl_conv4_3(conv4_3_feats)  # (N, 4 * n_classes, 38, 38)
-        c_conv4_3 = c_conv4_3.permute(0, 2, 3, 1).contiguous()  # (N, 38, 38, 4 * n_classes), to match prior-box order (after .view())
-        c_conv4_3 = c_conv4_3.view(batch_size, -1, self.n_classes)  # (N, 5776, n_classes), there are a total 5776 boxes on this feature map
+        c_conv4_3 = self.cl_conv4_3(conv4_3_feats) 
+        c_conv4_3 = c_conv4_3.permute(0, 2, 3, 1).contiguous()
+        c_conv4_3 = c_conv4_3.view(batch_size, -1, self.n_classes)
 
 
-        c_conv6 = self.cl_conv6(conv6_feats)  # (N, 6 * n_classes, 19, 19)
-        c_conv6 = c_conv6.permute(0, 2, 3, 1).contiguous()  # (N, 19, 19, 6 * n_classes)
-        c_conv6 = c_conv6.view(batch_size, -1, self.n_classes)  # (N, 2166, n_classes), there are a total 2116 boxes on this feature map
+        c_conv6 = self.cl_conv6(conv6_feats)
+        c_conv6 = c_conv6.permute(0, 2, 3, 1).contiguous()
+        c_conv6 = c_conv6.view(batch_size, -1, self.n_classes)
 
-        c_conv7 = self.cl_conv7(conv7_feats)  # (N, 6 * n_classes, 19, 19)
-        c_conv7 = c_conv7.permute(0, 2, 3, 1).contiguous()  # (N, 19, 19, 6 * n_classes)
-        c_conv7 = c_conv7.view(batch_size, -1, self.n_classes)  # (N, 2166, n_classes), there are a total 2116 boxes on this feature map
+        c_conv7 = self.cl_conv7(conv7_feats)
+        c_conv7 = c_conv7.permute(0, 2, 3, 1).contiguous()
+        c_conv7 = c_conv7.view(batch_size, -1, self.n_classes)
 
-        c_conv8 = self.cl_conv8(conv8_feats)  # (N, 6 * n_classes, 10, 10)
-        c_conv8 = c_conv8.permute(0, 2, 3, 1).contiguous()  # (N, 10, 10, 6 * n_classes)
-        c_conv8 = c_conv8.view(batch_size, -1, self.n_classes)  # (N, 600, n_classes)
+        c_conv8 = self.cl_conv8(conv8_feats)
+        c_conv8 = c_conv8.permute(0, 2, 3, 1).contiguous()
+        c_conv8 = c_conv8.view(batch_size, -1, self.n_classes)
 
-        c_conv9 = self.cl_conv9(conv9_feats)  # (N, 6 * n_classes, 5, 5)
-        c_conv9 = c_conv9.permute(0, 2, 3, 1).contiguous()  # (N, 5, 5, 6 * n_classes)
-        c_conv9 = c_conv9.view(batch_size, -1, self.n_classes)  # (N, 150, n_classes)
+        c_conv9 = self.cl_conv9(conv9_feats)
+        c_conv9 = c_conv9.permute(0, 2, 3, 1).contiguous()
+        c_conv9 = c_conv9.view(batch_size, -1, self.n_classes)
 
-        c_conv10 = self.cl_conv10(conv10_feats)  # (N, 4 * n_classes, 3, 3)
-        c_conv10 = c_conv10.permute(0, 2, 3, 1).contiguous()  # (N, 3, 3, 4 * n_classes)
-        c_conv10 = c_conv10.view(batch_size, -1, self.n_classes)  # (N, 36, n_classes)       
+        c_conv10 = self.cl_conv10(conv10_feats)
+        c_conv10 = c_conv10.permute(0, 2, 3, 1).contiguous()
+        c_conv10 = c_conv10.view(batch_size, -1, self.n_classes)
 
-        # A total of 8732 boxes
         # Concatenate in this specific order (i.e. must match the order of the prior-boxes)
 
-        locs = torch.cat([l_conv4_3, l_conv6, l_conv7, l_conv8, l_conv9, l_conv10], dim=1)  # (N, 8732, 4)
+        locs = torch.cat([l_conv4_3, l_conv6, l_conv7, l_conv8, l_conv9, l_conv10], dim=1)
         classes_scores = torch.cat([c_conv4_3, c_conv6, c_conv7, c_conv8, c_conv9, c_conv10],
-                                   dim=1)  # (N, 8732, n_classes)
+                                   dim=1)
 
         return locs, classes_scores
 
@@ -491,8 +464,6 @@ class SSD300(nn.Module):
         conv4_3_feats, conv6_feats , conv7_feats, conv8_feats, conv9_feats, conv10_feats = self.base(image_vis, image_lwir)
 
         # Run prediction convolutions (predict offsets w.r.t prior-boxes and classes in each resulting localization box)
-        # locs, classes_scores = self.pred_convs(conv4_3_feats, conv7_feats, conv8_2_feats, conv9_2_feats, conv10_2_feats,
-        #                                        conv11_2_feats)  # (N, 8732, 4), (N, 8732, n_classes)
         locs, classes_scores = self.pred_convs(conv4_3_feats, conv6_feats, conv7_feats, conv8_feats, conv9_feats, conv10_feats)  # (N, 8732, 4), (N, 8732, n_classes)
         return locs, classes_scores
 
@@ -697,8 +668,8 @@ class MultiBoxLoss(nn.Module):
         n_classes = predicted_scores.size(2)
         assert n_priors == predicted_locs.size(1) == predicted_scores.size(1)
 
-        true_locs = torch.zeros((batch_size, n_priors, 4), dtype=torch.float).to(device)  # (N, 8732, 4)
-        true_classes = torch.zeros((batch_size, n_priors), dtype=torch.long).to(device)  # (N, 8732)
+        true_locs = torch.zeros((batch_size, n_priors, 4), dtype=torch.float).to(device)
+        true_classes = torch.zeros((batch_size, n_priors), dtype=torch.long).to(device)
 
         # For each image
         for i in range(batch_size):
@@ -707,7 +678,7 @@ class MultiBoxLoss(nn.Module):
             overlap = find_jaccard_overlap(boxes[i],self.priors_xy)
 
             # For each prior, find the object that has the maximum overlap
-            overlap_for_each_prior, object_for_each_prior = overlap.max(dim=0)  # (8732)
+            overlap_for_each_prior, object_for_each_prior = overlap.max(dim=0)
 
             # We don't want a situation where an object is not represented in our positive (non-background) priors -
             # 1. An object might not be the best object for all priors, and is therefore not in object_for_each_prior.
