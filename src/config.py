@@ -7,23 +7,20 @@ import numpy as np
 
 from utils.transforms import *
 
-# os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
-
-## path
+### path
 PATH = edict()
 
-PATH.DB_ROOT = '/datasets/kaist-rgbt/'
+PATH.DB_ROOT = './data/kaist-rgbt/'
 PATH.JSON_GT_FILE = os.path.join( PATH.DB_ROOT, 'kaist_annotations_test20.json' )
 
-
-
-### train ###
+### train
 train = edict()
 
 train.day = "all"
 train.img_set = f"train-{train.day}-02.txt"
 
+## Load chekpoint
 train.checkpoint = None
 
 train.batch_size = 6 # batch size
