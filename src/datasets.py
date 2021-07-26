@@ -77,7 +77,6 @@ class KAISTPed(data.Dataset):
 
             vis_boxes = vis_boxes[1:]
             lwir_boxes = lwir_boxes[1:]
-        # test는 뭐였더라 기억이 안남,
         else :
             target = ET.parse(self._annopath % ( *frame_id[:-1], *frame_id[-1] ) ).getroot()
 

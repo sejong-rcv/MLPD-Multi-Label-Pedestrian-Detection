@@ -8,17 +8,14 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 from PIL import Image
 
-### Dataset
 from datasets import KAISTPed, LoadBox
 
-### Evaluation
 from utils.coco import COCO
 from utils.eval_MR_multisetup import COCOeval
 from utils.utils import *
 
 from utils.transforms import FusionDeadZone
 
-### config
 import config
 args = importlib.import_module('config').args
 

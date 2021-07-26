@@ -1,8 +1,10 @@
 from __future__ import division
-import torch    
-import math
 import sys
+import os
+import math
 import random
+
+import torch    
 from PIL import Image, ImageOps, ImageChops, ImageEnhance
 try:
     import accimage
@@ -13,8 +15,6 @@ import numbers
 import types
 import collections
 import warnings
-
-import pdb, os
 
 try:
     from . import functional as F
@@ -63,13 +63,11 @@ class Compose(object):
     def __call__(self, img, mask=None, vis_box=None, lwir_box=None, pair=1):
 
         for t in self.transforms:    
-            try:
-                if self.args != None and t.__class__.__name__ in self.args.upaired_augmentation:
-                    img, mask, vis_box, lwir_box, pair = t(img, mask, vis_box, lwir_box, pair)
-                else:
-                    img, mask, vis_box, lwir_box = t(img, mask, vis_box, lwir_box)
-            except:
-                import pdb;pdb.set_trace()
+
+            if self.args != None and t.__class__.__name__ in self.args.upaired_augmentation:
+                img, mask, vis_box, lwir_box, pair = t(img, mask, vis_box, lwir_box, pair)
+            else:
+                img, mask, vis_box, lwir_box = t(img, mask, vis_box, lwir_box)
         
         return img, mask, vis_box, lwir_box, pair
 

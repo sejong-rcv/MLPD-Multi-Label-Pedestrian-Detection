@@ -7,15 +7,9 @@ import torch.nn as nn
 import numpy as np
 from PIL import Image
 
-### Model4
 from model import SSD300, MultiBoxLoss
-
-### Dataset
 from datasets import KAISTPed, LoadBox
-
-### Evaluation
 from eval import *
-
 from utils.utils import *
 
 args = importlib.import_module('config').args
@@ -133,12 +127,9 @@ def main():
         save_checkpoint(epoch, model.module, optimizer, train_loss, jobs_dir)
         
         if epoch >= 3 :
-            rstFile = os.path.join(jobs_dir, './COCO_TEST_det_{:d}.json'.format(epoch)) 
-            # import pdb;pdb.set_trace()
-            try:
-                evaluate_coco(test_loader, model, rstFile=rstFile)
-            except:
-                import pdb;pdb.set_trace()
+            rstFile = os.path.join(jobs_dir, './COCO_TEST_det_{:d}.json'.format(epoch))   
+            evaluate_coco(test_loader, model, rstFile=rstFile)
+ 
         
 
 def train(args, train_loader, model, criterion, optimizer, epoch, logger):
@@ -184,7 +175,6 @@ def train(args, train_loader, model, criterion, optimizer, epoch, logger):
         loss.backward()
 
         if np.isnan(loss.item()):
-            import pdb; pdb.set_trace()
             loss,cls_loss,loc_loss = criterion(predicted_locs, predicted_scores, boxes, labels)  # scalar
 
         # Clip gradients, if necessary
