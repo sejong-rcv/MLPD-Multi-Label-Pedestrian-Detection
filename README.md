@@ -71,26 +71,27 @@ Download and place them in the directory `data/kaist-rgbt/`.
 
 +-- docker
 +-- src
-+-- kaist_annotations_test20.json
-+-- imageSets
-|   +-- train-all-02.txt
-|   +-- test-all-20.txt
-+-- data
-|   +-- kaist-rgbt
-|   |   +-- annotations_paired
-|   |   |   +-- set00
-|   |   |   |   +-- V000
-|   |   |   |   |   +-- lwir
-|   |   |   |   |   |   +-- I00000.txt
-|   |   |   |   |   +-- visible
-|   |   |   |   |   |   +-- I00000.txt
-|   |   +-- images
-|   |   |   +-- set00
-|   |   |   |   +-- V000
-|   |   |   |   |   +-- lwir
-|   |   |   |   |   |   +-- I00000.jpg
-|   |   |   |   |   +-- visible
-|   |   |   |   |   |   +-- I00000.jpg
+|
+|   +-- kaist_annotations_test20.json
+|   +-- imageSets
+|   |   +-- train-all-02.txt
+|   |   +-- test-all-20.txt
+|   +-- data
+|   |   +-- kaist-rgbt
+|   |   |   +-- annotations_paired
+|   |   |   |   +-- set00
+|   |   |   |   |   +-- V000
+|   |   |   |   |   |   +-- lwir
+|   |   |   |   |   |   |   +-- I00000.txt
+|   |   |   |   |   |   +-- visible
+|   |   |   |   |   |   |   +-- I00000.txt
+|   |   |   +-- images
+|   |   |   |   +-- set00
+|   |   |   |   |   +-- V000
+|   |   |   |   |   |   +-- lwir
+|   |   |   |   |   |   |   +-- I00000.jpg
+|   |   |   |   |   |   +-- visible
+|   |   |   |   |   |   |   +-- I00000.jpg
 
 
 ```
