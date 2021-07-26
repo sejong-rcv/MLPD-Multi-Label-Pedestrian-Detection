@@ -68,10 +68,9 @@ Download and place them in the directory `data/kaist-rgbt/`.
 
 ``` 
 <DATA_PATH>
-
++-- doc
 +-- docker
 +-- src
-|
 |   +-- kaist_annotations_test20.json
 |   +-- imageSets
 |   |   +-- train-all-02.txt
