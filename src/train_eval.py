@@ -82,8 +82,6 @@ def main():
                                                num_workers=args.dataset.workers,
                                                collate_fn=test_dataset.collate_fn, 
                                                pin_memory=True)    
-    #############################################################################################################################
-    
     ### Set job directory
     if args.exp_time is None:
         from datetime import datetime
@@ -100,18 +98,6 @@ def main():
 
     # Epochs
     for epoch in range(start_epoch, epochs):
-        # Paper describes decaying the learning rate at the 80000th, 100000th, 120000th 'iteration', i.e. model update or batch
-        # The paper uses a batch size of 32, which means there were about 517 iterations in an epoch
-        # Therefore, to find the epochs to decay at, you could do,
-        # if epoch in {80000 // 517, 100000 // 517, 120000 // 517}:
-        #     adjust_learning_rate(optimizer, 0.1)
-
-        # In practice, I just decayed the learning rate when loss stopped improving for long periods,
-        # and I would resume from the last best checkpoint with the new learning rate,
-        # since there's no point in resuming at the most recent and significantly worse checkpoint.
-        # So, when you're ready to decay the learning rate, just set checkpoint = 'BEST_checkpoint_ssd300.pth.tar' above
-        # and have adjust_learning_rate(optimizer, 0.1) BEFORE this 'for' loop
-
         # One epoch's training
         train_loss = train(args=args,
                            train_loader=train_loader,
