@@ -41,10 +41,7 @@ class KAISTPed(data.Dataset):
         self.annotation = args[condition].annotation
         self._parser = LoadBox()        
 
-        if condition == 'train' :
-            self._annopath = os.path.join('%s', 'annotations_paired', '%s', '%s', '%s', '%s.txt')
-        else :
-            self._annopath = os.path.join('%s', 'annotations-xml-15', '%s', '%s', '%s.xml')
+        self._annopath = os.path.join('%s', 'annotations_paired', '%s', '%s', '%s', '%s.txt')
 
         self._imgpath = os.path.join('%s', 'images', '%s', '%s', '%s', '%s.jpg')  
         
