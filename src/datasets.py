@@ -64,7 +64,12 @@ class KAISTPed(data.Dataset):
         
         frame_id = self.ids[index]
         set_id, vid_id, img_id = frame_id[-1]
-        
+
+        vis = Image.open( self._imgpath % ( *frame_id[:-1], set_id, vid_id, 'visible', img_id ))
+        lwir = Image.open( self._imgpath % ( *frame_id[:-1], set_id, vid_id, 'lwir', img_id ) ).convert('L')
+    
+        width, height = lwir.size
+
         # paired annotation
         if self.mode == 'train': 
             vis_boxes = list()
@@ -77,15 +82,7 @@ class KAISTPed(data.Dataset):
 
             vis_boxes = vis_boxes[1:]
             lwir_boxes = lwir_boxes[1:]
-        else :
-            target = ET.parse(self._annopath % ( *frame_id[:-1], *frame_id[-1] ) ).getroot()
 
-        vis = Image.open( self._imgpath % ( *frame_id[:-1], set_id, vid_id, 'visible', img_id ))
-        lwir = Image.open( self._imgpath % ( *frame_id[:-1], set_id, vid_id, 'lwir', img_id ) ).convert('L')
-    
-        width, height = lwir.size
-
-        if self.mode == 'train': 
             boxes_vis = [[0, 0, 0, 0, -1]]
             boxes_lwir = [[0, 0, 0, 0, -1]]
 
@@ -111,8 +108,10 @@ class KAISTPed(data.Dataset):
             boxes_lwir = np.array(boxes_lwir, dtype=np.float)
 
         else :
-            boxes_vis = self._parser(target, width, height)
-            boxes_lwir = self._parser(target, width, height)
+            boxes_vis = [[0, 0, 0, 0, -1]]
+            boxes_lwir = [[0, 0, 0, 0, -1]]
+            boxes_vis = np.array(boxes_vis, dtype=np.float)
+            boxes_lwir = np.array(boxes_lwir, dtype=np.float)
 
         ## Apply transforms
         if self.img_transform is not None:
