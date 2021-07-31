@@ -202,6 +202,11 @@ class VGGBase(nn.Module):
 
         #########################################################################
 
+        # Rescale conv4_3 after L2 norm
+        norm = conv4_3_feats.pow(2).sum(dim=1, keepdim=True).sqrt()
+        conv4_3_feats = conv4_3_feats / norm
+        conv4_3_feats = conv4_3_feats * self.rescale_factors
+        
         out_vis = F.relu(self.conv5_1_bn(self.conv5_1(out_vis))) 
         out_vis = F.relu(self.conv5_2_bn(self.conv5_2(out_vis))) 
         out_vis = F.relu(self.conv5_3_bn(self.conv5_3(out_vis)))
