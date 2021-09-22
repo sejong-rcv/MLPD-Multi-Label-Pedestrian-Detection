@@ -9,6 +9,24 @@ by applying geometric transformations to synthesize the unpaired multispectral i
 
 ![demo](./video.gif)
 
+
+### Results
+|Methods|Backbone|All|Day|Night|
+|:--:|:--:|:--:|:--:|:--:|
+| ACF | - | 47.32 | 42.57 | 56.17 |
+| Halfway Fusion | VGG16 | 25.75 | 24.88 | 26.59 | 
+| Fusion RPN+BF | VGG16 | 18.29 | 19.57 | 16.27 |
+| IAF R-CNN | VGG16 | 15.73 | 14.55 | 18.26 |
+| IATDNN+IASS | VGG16 | 14.95 | 14.67 | 15.72 |
+| CIAN | VGG16 | 14.12  | 14.77  | 11.13 |
+| MSDS-RCNN | VGG16 | 11.34 | 10.53 | 12.94 |
+| AR-CNN | VGG16 | 9.34 |  9.94 | 8.38 |
+| MBNet | ResNet50 | 8.13 | 8.28 | 7.86 |
+| MLPD (Ours) | VGG16 | 7.58 | 7.95 | 6.95 |
+| MLPD (Ours) | ResNet50 | 7.61 | 8.36 | 6.35 |
+
+
+
 ## Contents
 
 - [Prerequisites](#Prerequisites)
