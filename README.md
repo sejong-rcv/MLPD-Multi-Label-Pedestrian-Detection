@@ -1,5 +1,4 @@
 # MLPD: Multi-Label Pedestrian Detectorin Multispectral Domain
-### RA-L with IROS 2021 accepted Paper
 [![stars](https://img.shields.io/github/stars/sejong-rcv/MLPD-Multi-Label-Pedestrian-Detection?style=social)](https://github.com/sejong-rcv/MLPD-Multi-Label-Pedestrian-Detection)
 [![IEEE Xplore RA-L 2021](https://img.shields.io/badge/-IEEE%20Xplore%20RA--L%202021-blue)](https://ieeexplore.ieee.org/document/9496129)
 
