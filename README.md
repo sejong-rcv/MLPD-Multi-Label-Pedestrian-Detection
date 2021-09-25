@@ -3,6 +3,8 @@
 [![stars](https://img.shields.io/github/stars/sejong-rcv/MLPD-Multi-Label-Pedestrian-Detection?style=social)](https://github.com/sejong-rcv/MLPD-Multi-Label-Pedestrian-Detection)
 [![IEEE Xplore RA-L 2021](https://img.shields.io/badge/-IEEE%20Xplore%20RA--L%202021-blue)](https://ieeexplore.ieee.org/document/9496129)
 
+[MLPD: Multi-Label Pedestrian Detectorin Multispectral Domain](https://ieeexplore.ieee.org/document/9496129)
+
 ## Abstract     
 Multispectral pedestrian detection has been actively studied as a promising multi-modality solution to handle illumination and weather changes. Most multi-modality approaches carry the assumption that all inputs are fully-overlapped. However, these kinds of data pairs are not common in practical applications due to the complexity of the existing sensor configuration. In this paper, we tackle multispectral pedestrian detection, where all input data are 
 not paired. To this end, we propose a novel single-stage detection framework that leverages multi-label learning to learn input state-aware features by assigning a separate label according to the given state of the input image pair. We also present a novel augmentation strategy
