@@ -1,7 +1,4 @@
-## MLPD: Multi-Label Pedestrian Detectorin Multispectral Domain
-[![IEEE RA-L 2021](https://img.shields.io/badge/-IEEE%20RA--L%202021-blue)](https://ieeexplore.ieee.org/document/9496129)
- 
-[MLPD: Multi-Label Pedestrian Detectorin Multispectral Domain](https://ieeexplore.ieee.org/document/9496129)
+## [MLPD: Multi-Label Pedestrian Detectorin Multispectral Domain](https://ieeexplore.ieee.org/document/9496129) [![IEEE RA-L 2021](https://img.shields.io/badge/-IEEE%20RA--L%202021-blue)](https://ieeexplore.ieee.org/document/9496129)
  
 ### 📢Notice : Leaderboard is available.
  [![Leaderboard](https://img.shields.io/badge/Leaderboard-Multispectral%20Pedestrian%20Detection-brightgreen)](https://eval.ai/web/challenges/challenge-page/1247/leaderboard/3137)
