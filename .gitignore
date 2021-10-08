@@ -6,3 +6,4 @@ src/__pycache__
 src/utils/__pycache__
 evaluation_script/__pycache__
 data/kaist-rgbt
+pretrained/*
