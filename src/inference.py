@@ -123,33 +123,20 @@ if __name__ == '__main__':
     
     parser.add_argument('--FDZ', default='original', type=str, choices=FDZ_list,
                         help='Setting for the "Fusion Dead Zone" experiment. e.g. {}'.format(', '.join(FDZ_list)))
-    parser.add_argument('--model-path', type=str,
+    parser.add_argument('--model-path', required=True, type=str,
                         help='Pretrained model for evaluation.')
-    parser.add_argument('--result-file', type=str,
-                        help='Detection result file for evaluation.')
     arguments = parser.parse_args()
-
-    assert arguments.model_path or arguments.result_file, "Please specify '--model-path' or '--results-file'"
-    if arguments.model_path and arguments.result_file:
-        print('Both --model-path and --results-file are specified. Ignore --model-path.')
-        arguments.model_path = None
 
     print(arguments)
 
     fdz_case = arguments.FDZ.lower()
     model_path = arguments.model_path
-    result_filename = arguments.result_file
 
     # Run inference to get detection results
-    if model_path:
-        result_filename = model_path + f'.{fdz_case}_TEST_det'
+    result_filename = model_path + f'.{fdz_case}_TEST_det'
 
-        # Run inference
-        results = run_inference(model_path, fdz_case)
+    # Run inference
+    results = run_inference(model_path, fdz_case)
 
-        # Save results
-        save_results(results, result_filename)
-
-    # TODO(sohwang): Load results
-
-    # TODO(sohwang): Evaluate performance
+    # Save results
+    save_results(results, result_filename)
