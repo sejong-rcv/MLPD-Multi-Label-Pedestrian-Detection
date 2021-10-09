@@ -1,50 +1,47 @@
+"""Evaluate performance on multispectral pedestrian detection benchmark
+
+This script evalutes multispectral detection performance.
+We adopt [cocoapi](https://github.com/cocodataset/cocoapi)
+and apply minor modification for KAISTPed benchmark.
+
+"""
 from collections import defaultdict
 import argparse
 import copy
 import datetime
-import itertools
 import json
 import matplotlib
 import numpy as np
 import os
 import pdb
 import sys
-import time
+import tempfile
 import traceback
 
-matplotlib.use('Agg')
-from matplotlib.patches import Polygon
+# matplotlib.use('Agg')
+# from matplotlib.patches import Polygon
 import matplotlib.pyplot as plt
+
+from coco import COCO
+from cocoeval import COCOeval, Params
 
 font = {'size': 22}
 matplotlib.rc('font', **font)
 
 
-class COCOeval:
+class KAISTPedEval(COCOeval):
 
-    def __init__(self, cocoGt=None, cocoDt=None, iouType='segm'):
+    def __init__(self, kaistGt=None, kaistDt=None, iouType='segm', method='unknown'):
         '''
         Initialize CocoEval using coco APIs for gt and dt
         :param cocoGt: coco object with ground truth annotations
         :param cocoDt: coco object with detection results
         :return: None
         '''
-        if not iouType:
-            print('iouType not specified. use default iouType segm')
-        self.cocoGt = cocoGt                    # ground truth COCO API
-        self.cocoDt = cocoDt                    # detections COCO API
-        self.params = {}                        # evaluation parameters
-        self.evalImgs = defaultdict(list)       # per-image per-category evaluation results [KxAxI] elements
-        self.eval = {}                          # accumulated evaluation results
-        self._gts = defaultdict(list)           # gt for evaluation
-        self._dts = defaultdict(list)           # dt for evaluation
-        self.params = Params(iouType=iouType)   # parameters
-        self._paramsEval = {}                   # parameters for evaluation
-        self.stats = []                         # result summarization
-        self.ious = {}                          # ious between all gts and dts
-        if cocoGt is not None:
-            self.params.imgIds = sorted(cocoGt.getImgIds())
-            self.params.catIds = sorted(cocoGt.getCatIds())
+        super().__init__(kaistGt, kaistDt, iouType)
+
+        self.params = KAISTParams(iouType=iouType)   # parameters
+        self.method = method
 
     def _prepare(self, id_setup):
         '''
@@ -79,10 +76,6 @@ class COCOeval:
             self._gts[gt['image_id'], gt['category_id']].append(gt)
         for dt in dts:
             self._dts[dt['image_id'], dt['category_id']].append(dt)
-        # for gt in gts:
-        #     self._gts[gt['image_id'], gt['category_id'], gt['id']].append(gt)
-        # for dt in dts:
-        #     self._dts[dt['image_id'], dt['category_id'], gt['id']].append(dt)
 
         self.evalImgs = defaultdict(list)   # per-image per-category evaluation results
         self.eval = {}                      # accumulated evaluation results
@@ -92,7 +85,6 @@ class COCOeval:
         Run per image evaluation on given images and store results (a list of dict) in self.evalImgs
         :return: None
         '''
-        # print('Running per image evaluation...')
         p = self.params
         # add backward compatibility if useSegm is specified in params
         if p.useSegm is not None:
@@ -307,7 +299,6 @@ class COCOeval:
         :param p: input params for evaluation
         :return: None
         '''
-        # print('Accumulating evaluation results...')
         if not self.evalImgs:
             print('Please run evaluate() first')
         # allows input customized parameters
@@ -402,40 +393,40 @@ class COCOeval:
             'yy': yy_graph
         }
 
-    def draw_figure(self, ax, filename='result.jpg'):
+    @staticmethod
+    def draw_figure(ax, eval_results, methods, colors):
         """Draw figure"""
+        assert len(eval_results) == len(methods) == len(colors)
 
-        mrs = 1 - self.eval['TP']
-        mean_s = np.log(mrs[mrs < 2])
-        mean_s = np.mean(mean_s)
-        mean_s = float(np.exp(mean_s) * 100)
+        for eval_result, method, color in zip(eval_results, methods, colors):
+            mrs = 1 - eval_result['TP']
+            mean_s = np.log(mrs[mrs < 2])
+            mean_s = np.mean(mean_s)
+            mean_s = float(np.exp(mean_s) * 100)
 
-        # xx = self.eval['xx']
-        # yy = self.eval['yy']
+            xx = eval_result['xx']
+            yy = eval_result['yy']
 
-        ax.cla()
-        return mean_s
+            ax.plot(xx[0], yy[0], color=color, linewidth=3, label=f'{mean_s:.2f}%, {method}')
 
-        # ax.plot( xx[0], yy[0], linewidth=3, label='{:.2f}%, {:s}'.format(mean_s, os.path.basename(filename)) )
-        # ax.set_yscale('log')
-        # ax.set_xscale('log')
-        # ax.legend()
+        ax.set_yscale('log')
+        ax.set_xscale('log')
+        ax.legend()
 
-        # yt = [1,5] + list(range(10,60,10)) + [64, 80]
-        # yticklabels=[ '.{:02d}'.format(num) for num in yt ]
+        yt = [1, 5] + list(range(10, 60, 10)) + [64, 80]
+        yticklabels = ['.{:02d}'.format(num) for num in yt]
 
-        # yt += [100]
-        # yt = [ yy/100.0 for yy in yt ]
-        # yticklabels += [1]
+        yt += [100]
+        yt = [yy / 100.0 for yy in yt]
+        yticklabels += [1]
         
-        # ax.set_yticks(yt)
-        # ax.set_yticklabels(yticklabels)
-        # plt.grid(which='major', axis='both')
-        # plt.ylim(0.01, 1)
-        # plt.xlim(2e-4, 50)
-        # plt.ylabel('miss rate')
-        # plt.xlabel('false positives per image')
-        # plt.savefig(filename)
+        ax.set_yticks(yt)
+        ax.set_yticklabels(yticklabels)
+        ax.grid(which='major', axis='both')
+        ax.set_ylim(0.01, 1)
+        ax.set_xlim(2e-4, 50)
+        ax.set_ylabel('miss rate')
+        ax.set_xlabel('false positives per image')
 
     def summarize(self, id_setup, res_file=None):
         '''
@@ -471,7 +462,6 @@ class COCOeval:
                 mean_s = np.log(mrs[mrs < 2])
                 mean_s = np.mean(mean_s)
                 mean_s = np.exp(mean_s)
-            # print(iStr.format(titleStr, typeStr,setupStr, iouStr, heightStr, occlStr, mean_s*100))
 
             if res_file:
                 res_file.write(iStr.format(titleStr, typeStr, setupStr, iouStr, heightStr, occlStr, mean_s * 100))
@@ -483,274 +473,31 @@ class COCOeval:
         
         return _summarize(iouThr=.5, maxDets=1000)
 
-    def __str__(self):
-        self.summarize()
 
+class KAISTParams(Params):
+    """Params for KAISTPed evaluation api"""
 
-class Params:
-    '''
-    Params for coco evaluation api
-    '''
     def setDetParams(self):
-        self.imgIds = []
-        self.catIds = []
-        # np.arange causes trouble.  the data point on arange is slightly larger than the true value
+        super().setDetParams()
 
-        self.recThrs = np.linspace(.0, 1.00, int(np.round((1.00 - .0) / .01) + 1), endpoint=True)
-        self.fppiThrs = np.array([0.0100, 0.0178, 0.0316, 0.0562, 0.1000, 0.1778, 0.3162, 0.5623, 1.0000])
+        # Override variables for KAISTPed benchmark
+        self.iouThrs = np.array([0.5])
         self.maxDets = [1000]
-        self.useCats = 1
 
-        self.iouThrs = np.array([0.5])  # np.linspace(.5, 0.95, np.round((0.95 - .5) / .05) + 1, endpoint=True)
-
+        # KAISTPed specific settings
+        self.fppiThrs = np.array([0.0100, 0.0178, 0.0316, 0.0562, 0.1000, 0.1778, 0.3162, 0.5623, 1.0000])
         self.HtRng = [[55, 1e5 ** 2], [50, 75], [50, 1e5 ** 2], [20, 1e5 ** 2]]
         self.OccRng = [[0, 1], [0, 1], [2], [0, 1, 2]]
         self.SetupLbl = ['Reasonable', 'Reasonable_small', 'Reasonable_occ=heavy', 'All']
 
         self.bndRng = [5, 5, 635, 507]  # discard bbs outside this pixel range
 
-    def __init__(self, iouType='segm'):
-        if iouType == 'segm' or iouType == 'bbox':
-            self.setDetParams()
-        else:
-            raise Exception('iouType not supported')
-        self.iouType = iouType
-        # useSegm is deprecated
-        self.useSegm = None
 
+class KAIST(COCO):
 
-class COCO:
-    def __init__(self, annotation_file=None):
-        """
-        Constructor of Microsoft COCO helper class for reading and visualizing annotations.
-        :param annotation_file (str): location of annotation file
-        :param image_folder (str): location to the folder that hosts images.
-        :return:
-        """
-        # load dataset
-        self.dataset, self.anns, self.cats, self.imgs = dict(), dict(), dict(), dict()
-        self.imgToAnns, self.catToImgs = defaultdict(list), defaultdict(list)
-        if annotation_file is not None:
-            # print('loading annotations into memory...')
-            dataset = json.load(open(annotation_file, 'r'))
-            assert type(dataset) == dict, 'annotation file format {} not supported'.format(type(dataset))
-            # print('Done (t={:0.2f}s)'.format(time.time()- tic))
-            self.dataset = dataset
-            self.createIndex()
-
-    def createIndex(self):
-        # create index
-        # print('creating index...')
-        anns, cats, imgs = {}, {}, {}
-        imgToAnns, catToImgs = defaultdict(list), defaultdict(list)
-        if 'annotations' in self.dataset:
-            for ann in self.dataset['annotations']:
-                imgToAnns[ann['image_id']].append(ann)
-                anns[ann['id']] = ann
-
-        if 'images' in self.dataset:
-            for img in self.dataset['images']:
-                imgs[img['id']] = img
-
-        if 'categories' in self.dataset:
-            for cat in self.dataset['categories']:
-                cats[cat['id']] = cat
-
-        if 'annotations' in self.dataset and 'categories' in self.dataset:
-            for ann in self.dataset['annotations']:
-                catToImgs[ann['category_id']].append(ann['image_id'])
-
-        # print('index created!')
-
-        # create class members
-        self.anns = anns
-        self.imgToAnns = imgToAnns
-        self.catToImgs = catToImgs
-        self.imgs = imgs
-        self.cats = cats
-
-    def info(self):
-        """
-        Print information about the annotation file.
-        :return:
-        """
-        for key, value in self.dataset['info'].items():
-            print('{}: {}'.format(key, value))
-
-    def getAnnIds(self, imgIds=[], catIds=[], areaRng=[], iscrowd=None):
-        """
-        Get ann ids that satisfy given filter conditions. default skips that filter
-        :param imgIds  (int array)     : get anns for given imgs
-               catIds  (int array)     : get anns for given cats
-               areaRng (float array)   : get anns for given area range (e.g. [0 inf])
-               iscrowd (boolean)       : get anns for given crowd label (False or True)
-        :return: ids (int array)       : integer array of ann ids
-        """
-        imgIds = imgIds if type(imgIds) == list else [imgIds]
-        catIds = catIds if type(catIds) == list else [catIds]
-
-        if len(imgIds) == len(catIds) == len(areaRng) == 0:
-            anns = self.dataset['annotations']
-        else:
-            if not len(imgIds) == 0:
-                lists = [self.imgToAnns[imgId] for imgId in imgIds if imgId in self.imgToAnns]
-                anns = list(itertools.chain.from_iterable(lists))
-            else:
-                anns = self.dataset['annotations']
-            anns = anns if len(catIds) == 0 else [ann for ann in anns if ann['category_id'] in catIds]
-            anns = anns if len(areaRng) == 0 else [ann for ann in anns if ann['area'] > areaRng[0] and ann['area'] < areaRng[1]]
-        if iscrowd is not None:
-            ids = [ann['id'] for ann in anns if ann['iscrowd'] == iscrowd]
-        else:
-            ids = [ann['id'] for ann in anns]
-        return ids
-
-    def getCatIds(self, catNms=[], supNms=[], catIds=[]):
-        """
-        filtering parameters. default skips that filter.
-        :param catNms (str array)  : get cats for given cat names
-        :param supNms (str array)  : get cats for given supercategory names
-        :param catIds (int array)  : get cats for given cat ids
-        :return: ids (int array)   : integer array of cat ids
-        """
-        catNms = catNms if type(catNms) == list else [catNms]
-        supNms = supNms if type(supNms) == list else [supNms]
-        catIds = catIds if type(catIds) == list else [catIds]
-
-        if len(catNms) == len(supNms) == len(catIds) == 0:
-            cats = self.dataset['categories']
-        else:
-            cats = self.dataset['categories']
-            cats = cats if len(catNms) == 0 else [cat for cat in cats if cat['name'] in catNms]
-            cats = cats if len(supNms) == 0 else [cat for cat in cats if cat['supercategory'] in supNms]
-            cats = cats if len(catIds) == 0 else [cat for cat in cats if cat['id'] in catIds]
-        ids = [cat['id'] for cat in cats]
-        return ids
-
-    def getImgIds(self, imgIds=[], catIds=[]):
-        '''
-        Get img ids that satisfy given filter conditions.
-        :param imgIds (int array) : get imgs for given ids
-        :param catIds (int array) : get imgs with all given cats
-        :return: ids (int array)  : integer array of img ids
-        '''
-        imgIds = imgIds if type(imgIds) == list else [imgIds]
-        catIds = catIds if type(catIds) == list else [catIds]
-
-        if len(imgIds) == len(catIds) == 0:
-            ids = self.imgs.keys()
-        else:
-            ids = set(imgIds)
-            for i, catId in enumerate(catIds):
-                if i == 0 and len(ids) == 0:
-                    ids = set(self.catToImgs[catId])
-                else:
-                    ids &= set(self.catToImgs[catId])
-        return list(ids)
-
-    def loadAnns(self, ids=[]):
-        """
-        Load anns with the specified ids.
-        :param ids (int array)       : integer ids specifying anns
-        :return: anns (object array) : loaded ann objects
-        """
-        if type(ids) == list:
-            return [self.anns[id] for id in ids]
-        elif type(ids) == int:
-            return [self.anns[ids]]
-
-    def loadCats(self, ids=[]):
-        """
-        Load cats with the specified ids.
-        :param ids (int array)       : integer ids specifying cats
-        :return: cats (object array) : loaded cat objects
-        """
-        if type(ids) == list:
-            return [self.cats[id] for id in ids]
-        elif type(ids) == int:
-            return [self.cats[ids]]
-
-    def loadImgs(self, ids=[]):
-        """
-        Load anns with the specified ids.
-        :param ids (int array)       : integer ids specifying img
-        :return: imgs (object array) : loaded img objects
-        """
-        if type(ids) == list:
-            return [self.imgs[id] for id in ids]
-        elif type(ids) == int:
-            return [self.imgs[ids]]
-
-    def showAnns(self, anns):
-        """
-        Display the specified annotations.
-        :param anns (array of object): annotations to display
-        :return: None
-        """
-        if len(anns) == 0:
-            return 0
-        if 'segmentation' in anns[0] or 'keypoints' in anns[0]:
-            datasetType = 'instances'
-        elif 'caption' in anns[0]:
-            datasetType = 'captions'
-        else:
-            raise Exception('datasetType not supported')
-        if datasetType == 'instances':
-            ax = plt.gca()
-            ax.set_autoscale_on(False)
-            polygons = []
-            color = []
-            for ann in anns:
-                c = (np.random.random((1, 3)) * 0.6 + 0.4).tolist()[0]
-                if 'segmentation' in ann:
-                    if type(ann['segmentation']) == list:
-                        # polygon
-                        for seg in ann['segmentation']:
-                            poly = np.array(seg).reshape((int(len(seg) / 2), 2))
-                            polygons.append(Polygon(poly))
-                            color.append(c)
-                    else:
-                        # mask
-                        t = self.imgs[ann['image_id']]
-                        if type(ann['segmentation']['counts']) == list:
-                            rle = maskUtils.frPyObjects([ann['segmentation']], t['height'], t['width'])
-                        else:
-                            rle = [ann['segmentation']]
-                        m = maskUtils.decode(rle)
-                        img = np.ones((m.shape[0], m.shape[1], 3))
-                        if ann['iscrowd'] == 1:
-                            color_mask = np.array([2.0, 166.0, 101.0]) / 255
-                        if ann['iscrowd'] == 0:
-                            color_mask = np.random.random((1, 3)).tolist()[0]
-                        for i in range(3):
-                            img[:, :, i] = color_mask[i]
-                        ax.imshow(np.dstack((img, m * 0.5)))
-                if 'keypoints' in ann and type(ann['keypoints']) == list:
-                    # turn skeleton into zero-based index
-                    sks = np.array(self.loadCats(ann['category_id'])[0]['skeleton']) - 1
-                    kp = np.array(ann['keypoints'])
-                    x = kp[0::3]
-                    y = kp[1::3]
-                    v = kp[2::3]
-                    for sk in sks:
-                        if np.all(v[sk] > 0):
-                            plt.plot(x[sk], y[sk], linewidth=3, color=c)
-                    plt.plot(x[v > 0], y[v > 0], 'o',
-                             markersize=8, markerfacecolor=c, markeredgecolor='k', markeredgewidth=2)
-                    plt.plot(x[v > 1], y[v > 1], 'o',
-                             markersize=8, markerfacecolor=c, markeredgecolor=c, markeredgewidth=2)
-            # p = PatchCollection(polygons, facecolor=color, linewidths=0, alpha=0.4)
-            # ax.add_collection(p)
-            # p = PatchCollection(polygons, facecolor='none', edgecolors=color, linewidths=2)
-            # ax.add_collection(p)
-        elif datasetType == 'captions':
-            for ann in anns:
-                print(ann['caption'])
-
-    ##################################################
     def txt2json(self, txt):
         """
-        Evlautes txt file that covert coco json format
+        Convert txt file to coco json format
         Arguments:
             `txt`: Path to annotation file that txt
         """
@@ -768,7 +515,6 @@ class COCO:
 
             predict_result.append(json_format)
         return predict_result
-    ##################################################
 
     def loadRes(self, resFile):
         """
@@ -776,221 +522,123 @@ class COCO:
         :param   resFile (str)     : file name of result file
         :return: res (obj)         : result api object
         """
-        res = COCO()
-        res.dataset['images'] = [img for img in self.dataset['images']]
 
-        # print('Loading and preparing results...')
-
-        # Python 3 renamed the unicode type to str
-        if type(resFile) == str or type(resFile) == str:
-            
-            ##################################################
-            file_ext = resFile.split('/')[-1].split('.')[-1]
-            if file_ext == 'txt':
-                anns = self.txt2json(resFile)
-            else:
-                anns = json.load(open(resFile))
-            ##################################################
-
-        elif type(resFile) == np.ndarray:
-            anns = self.loadNumpyAnnotations(resFile)
+        # If resFile is a text file, convert it to json
+        if type(resFile) == str and resFile.endswith('.txt'):
+            anns = self.txt2json(resFile)
+            _resFile = next(tempfile._get_candidate_names())
+            with open(_resFile, 'w') as f:
+                json.dump(anns, f, indent=4)
+            res = super().loadRes(_resFile)
+            os.remove(_resFile)
         else:
-            anns = resFile
-        assert type(anns) == list, 'results in not an array of objects'
-        annsImgIds = [ann['image_id'] for ann in anns]
+            res = super().loadRes(resFile)
 
-        assert set(annsImgIds) == (set(annsImgIds) & set(self.getImgIds())), \
-               'Results do not correspond to current coco set'
-        if 'caption' in anns[0]:
-            imgIds = set([img['id'] for img in res.dataset['images']]) & set([ann['image_id'] for ann in anns])
-            res.dataset['images'] = [img for img in res.dataset['images'] if img['id'] in imgIds]
-            for id, ann in enumerate(anns):
-                ann['id'] = id + 1
-        elif 'bbox' in anns[0] and not anns[0]['bbox'] == []:
-            res.dataset['categories'] = copy.deepcopy(self.dataset['categories'])
-
-            for id, ann in enumerate(anns):
-                bb = ann['bbox']
-                x1, x2, y1, y2 = [bb[0], bb[0] + bb[2], bb[1], bb[1] + bb[3]]
-                if 'segmentation' not in ann:
-                    ann['segmentation'] = [[x1, y1, x1, y2, x2, y2, x2, y1]]
-                ann['area'] = bb[2] * bb[3]
-                ann['height'] = bb[3]
-                ann['id'] = id + 1
-                ann['iscrowd'] = 0
-        elif 'segmentation' in anns[0]:
-            res.dataset['categories'] = copy.deepcopy(self.dataset['categories'])
-            for id, ann in enumerate(anns):
-                # now only support compressed RLE format as segmentation results
-                ann['area'] = maskUtils.area(ann['segmentation'])
-                if 'bbox' not in ann:
-                    ann['bbox'] = maskUtils.toBbox(ann['segmentation'])
-                ann['id'] = id + 1
-                ann['iscrowd'] = 0
-        elif 'keypoints' in anns[0]:
-            res.dataset['categories'] = copy.deepcopy(self.dataset['categories'])
-            for id, ann in enumerate(anns):
-                s = ann['keypoints']
-                x = s[0::3]
-                y = s[1::3]
-                x0, x1, y0, y1 = np.min(x), np.max(x), np.min(y), np.max(y)
-                ann['area'] = (x1 - x0) * (y1 - y0)
-                ann['id'] = id + 1
-                ann['bbox'] = [x0, y0, x1 - x0, y1 - y0]
-        # print('DONE (t={:0.2f}s)'.format(time.time()- tic))
-
-        res.dataset['annotations'] = anns
-        res.createIndex()
         return res
 
-    def download(self, tarDir=None, imgIds=[]):
-        '''
-        Download COCO images from mscoco.org server.
-        :param tarDir (str): COCO results directory name
-               imgIds (list): images to be downloaded
-        :return:
-        '''
-        if tarDir is None:
-            print('Please specify target directory')
-            return -1
-        if len(imgIds) == 0:
-            imgs = self.imgs.values()
-        else:
-            imgs = self.loadImgs(imgIds)
-        N = len(imgs)
-        if not os.path.exists(tarDir):
-            os.makedirs(tarDir)
-        for i, img in enumerate(imgs):
-            tic = time.time()
-            fname = os.path.join(tarDir, img['file_name'])
-            if not os.path.exists(fname):
-                urlretrieve(img['coco_url'], fname)
-            print('downloaded {}/{} images (t={:0.1f}s)'.format(i, N, time.time() - tic))
 
-    def loadNumpyAnnotations(self, data):
-        """
-        Convert result data from a numpy array [Nx7] where each row contains {imageID,x1,y1,w,h,score,class}
-        :param  data (numpy.ndarray)
-        :return: annotations (python nested list)
-        """
-        print('Converting ndarray to lists...')
-        assert(type(data) == np.ndarray)
-        print(data.shape)
-        assert(data.shape[1] == 7)
-        N = data.shape[0]
-        ann = []
-        for i in range(N):
-            if i % 1000000 == 0:
-                print('{}/{}'.format(i, N))
-            ann += [{
-                'image_id': int(data[i, 0]),
-                'bbox': [data[i, 1], data[i, 2], data[i, 3], data[i, 4]],
-                'score': data[i, 5],
-                'category_id': int(data[i, 6]),
-            }]
-        return ann
+def evaluate(test_annotation_file: str, user_submission_file: str, phase_codename: str = 'Multispectral'):
+    """Evaluates the submission for a particular challenge phase and returns score
 
-    def annToRLE(self, ann):
-        """
-        Convert annotation which can be polygons, uncompressed RLE to RLE.
-        :return: binary mask (numpy 2D array)
-        """
-        t = self.imgs[ann['image_id']]
-        h, w = t['height'], t['width']
-        segm = ann['segmentation']
-        if type(segm) == list:
-            # polygon -- a single object might consist of multiple parts
-            # we merge all parts into one mask rle code
-            rles = maskUtils.frPyObjects(segm, h, w)
-            rle = maskUtils.merge(rles)
-        elif type(segm['counts']) == list:
-            # uncompressed RLE
-            rle = maskUtils.frPyObjects(segm, h, w)
-        else:
-            # rle
-            rle = ann['segmentation']
-        return rle
+    Parameters
+    ----------
+    test_annotations_file: str
+        Path to test_annotation_file on the server
+    user_submission_file: str
+        Path to file submitted by the user
+    phase_codename: str
+        Phase to which submission is made
 
-    def annToMask(self, ann):
-        """
-        Convert annotation which can be polygons, uncompressed RLE, or RLE to binary mask.
-        :return: binary mask (numpy 2D array)
-        """
-        rle = self.annToRLE(ann)
-        m = maskUtils.decode(rle)
-        return m
-
-
-def evaluate(test_annotation_file, user_submission_file, phase_codename='Multispectral', **kwargs):
-    # print("Starting Evaluation.....")
+    Returns
+    -------
+    Dict
+        Evaluated/Accumulated KAISTPedEval objects for All/Day/Night
     """
-    Evaluates the submission for a particular challenge phase and returns score
-    Arguments:
+    kaistGt = KAIST(test_annotation_file)
+    kaistDt = kaistGt.loadRes(user_submission_file)
 
-        `test_annotations_file`: Path to test_annotation_file on the server
-        `user_submission_file`: Path to file submitted by the user
-        `phase_codename`: Phase to which submission is made
+    imgIds = sorted(kaistGt.getImgIds())
+    method = os.path.basename(user_submission_file).split('_')[0]
+    kaistEval = KAISTPedEval(kaistGt, kaistDt, 'bbox', method)
 
+    kaistEval.params.catIds = [1]
+
+    eval_result = {
+        'all': copy.deepcopy(kaistEval),
+        'day': copy.deepcopy(kaistEval),
+        'night': copy.deepcopy(kaistEval),
+    }
+
+    eval_result['all'].params.imgIds = imgIds
+    eval_result['all'].evaluate(0)
+    eval_result['all'].accumulate()
+    MR_all = eval_result['all'].summarize(0)
+
+    eval_result['day'].params.imgIds = imgIds[:1455]
+    eval_result['day'].evaluate(0)
+    eval_result['day'].accumulate()
+    MR_day = eval_result['day'].summarize(0)
+
+    eval_result['night'].params.imgIds = imgIds[1455:]
+    eval_result['night'].evaluate(0)
+    eval_result['night'].accumulate()
+    MR_night = eval_result['night'].summarize(0)
+
+    recall_all = 1 - eval_result['all'].eval['yy'][0][-1]
+    msg = f'\n########## Method: {method} ##########\n' \
+        + f'MR_all: {MR_all * 100:.2f}\n' \
+        + f'MR_day: {MR_day * 100:.2f}\n' \
+        + f'MR_night: {MR_night * 100:.2f}\n' \
+        + f'recall_all: {recall_all * 100:.2f}\n' \
+        + '######################################\n\n'
+    print(msg)
+
+    return eval_result
+
+
+def draw_all(eval_results, filename='figure.jpg'):
+    """Draw all results in a single figure
+
+    Parameters
+    ----------
+    eval_results: List of Dict
+        Aggregated evaluation results from evaluate function.
+        Dictionary contains KAISTPedEval objects for All/Day/Night
+    filename: str
+        Filename of figure
     """
-    cocoGt = COCO(test_annotation_file)
-    cocoDt = cocoGt.loadRes(user_submission_file)
-    
-    imgIds = sorted(cocoGt.getImgIds())
-    cocoEval = COCOeval(cocoGt, cocoDt, 'bbox')
+    fig, axes = plt.subplots(1, 3, figsize=(45, 10))
 
-    cocoEval.params.catIds = [1]
+    methods = [res['all'].method for res in eval_results]
+    colors = [plt.cm.get_cmap('Paired')(ii)[:3] for ii in range(len(eval_results))]
 
-    # all
-    cocoEval.params.imgIds = imgIds
-    cocoEval.evaluate(0)
-    cocoEval.accumulate()
-    MR_all = cocoEval.summarize(0)    
+    eval_results_all = [res['all'].eval for res in eval_results]
+    KAISTPedEval.draw_figure(axes[0], eval_results_all, methods, colors)
+    axes[0].set_title('All')
 
-    recall = 1 - cocoEval.eval['yy'][0][-1]
+    eval_results_day = [res['day'].eval for res in eval_results]
+    KAISTPedEval.draw_figure(axes[1], eval_results_day, methods, colors)
+    axes[1].set_title('Day')
 
-    # night
-    cocoEval.params.imgIds = imgIds[1455:]
-    cocoEval.evaluate(0)
-    cocoEval.accumulate()
-    MR_night = cocoEval.summarize(0)    
+    eval_results_night = [res['night'].eval for res in eval_results]
+    KAISTPedEval.draw_figure(axes[2], eval_results_night, methods, colors)
+    axes[2].set_title('Night')
 
-    # day
-    cocoEval.params.imgIds = imgIds[:1455]
-    cocoEval.evaluate(0)
-    cocoEval.accumulate()
-    MR_day = cocoEval.summarize(0)    
-    
-    output = {}
-
-    output["result"] = [
-        {
-            phase_codename: {
-                "MR(all)": MR_all * 100,
-                "MR(day)": MR_day * 100,
-                "MR(night)": MR_night * 100,
-                "Recall": recall * 100,
-
-            }
-        },
-    ]
-    # To display the results in the result file
-    output["submission_result"] = output["result"][0]
-
-    return output
+    filename += '' if filename.endswith('.jpg') or filename.endswith('.png') else '.jpg'
+    plt.savefig(filename)
 
 
 if __name__ == "__main__":
-    import pprint
-
     parser = argparse.ArgumentParser(description='eval models')
     parser.add_argument('--annFile', type=str, default='./KAIST_annotation.json',
                         help='Please put the path of the annotation file. Only support json format.')
-    parser.add_argument('--rstFile', type=str, default='./MLPD_result.json',
+    parser.add_argument('--rstFiles', type=str, nargs='+', default=['./MLPD_result.json'],
                         help='Please put the path of the result file. Only support json, txt format.')
     args = parser.parse_args()
 
     phase = "Multispectral"
-    result = evaluate(args.annFile, args.rstFile, phase)
+    results = [evaluate(args.annFile, rstFile, phase) for rstFile in args.rstFiles]
 
-    pp = pprint.PrettyPrinter(indent=4)
-    pp.pprint(result['result'][0][phase])
+    # Sort results by MR_all
+    results = sorted(results, key=lambda x: x['all'].summarize(0), reverse=True)
+    draw_all(results)
