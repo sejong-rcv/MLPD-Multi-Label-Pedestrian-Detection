@@ -1,4 +1,4 @@
-## [MLPD: Multi-Label Pedestrian Detectorin Multispectral Domain](https://ieeexplore.ieee.org/document/9496129) 
+## [MLPD: Multi-Label Pedestrian Detectorin Multispectral Domain](https://ieeexplore.ieee.org/document/9496129)
 
 [![IEEE RA-L 2021](https://img.shields.io/badge/-IEEE%20RA--L%202021-blue)](https://ieeexplore.ieee.org/document/9496129) [![Star on GitHub](https://img.shields.io/github/stars/sejong-rcv/MLPD-Multi-Label-Pedestrian-Detection.svg?style=social)](https://github.com/sejong-rcv/MLPD-Multi-Label-Pedestrian-Detection/stargazers)
 
@@ -135,13 +135,24 @@ If you want to skip the training process, download the pre-trained model and pla
 
 - [Pretrained Model](https://drive.google.com/file/d/1smXP4xpSDYC8cL_bbT9-E2aywROLlC2v/view?usp=sharing)
 
+### Inference
+
+Try below command to get inference from pretrained model
+
+```bash
+$ python src/inference.py --FDZ original --model-path pretrained/best_checkpoint.pth.tar
+
+```
+
 ### Evaluation
 `python eval.py`
 
 ### Fusion Dead Zone Experiment
 If you want to check the results of the 'FDZ' experiments, you can run the file
 
-`sh FDZ_exp.sh`
+```bash
+$ sh FDZ_exp.sh
+```
 
 
 ## Acknowledgement
