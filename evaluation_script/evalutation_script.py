@@ -1,22 +1,24 @@
-import random, os, pdb, json, copy, sys, time
-import argparse
-import itertools
-
-import numpy as np
-import datetime
-
 from collections import defaultdict
-
-import requests
-
+import argparse
+import copy
+import datetime
+import itertools
+import json
 import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-from matplotlib.collections import PatchCollection
-from matplotlib.patches import Polygon
+import numpy as np
+import os
+import pdb
+import sys
+import time
+import traceback
 
-font = {'size'   : 22}  
+matplotlib.use('Agg')
+from matplotlib.patches import Polygon
+import matplotlib.pyplot as plt
+
+font = {'size': 22}
 matplotlib.rc('font', **font)
+
 
 class COCOeval:
 
@@ -29,21 +31,20 @@ class COCOeval:
         '''
         if not iouType:
             print('iouType not specified. use default iouType segm')
-        self.cocoGt   = cocoGt              # ground truth COCO API
-        self.cocoDt   = cocoDt              # detections COCO API
-        self.params   = {}                  # evaluation parameters
-        self.evalImgs = defaultdict(list)   # per-image per-category evaluation results [KxAxI] elements
-        self.eval     = {}                  # accumulated evaluation results
-        self._gts = defaultdict(list)       # gt for evaluation
-        self._dts = defaultdict(list)       # dt for evaluation
-        self.params = Params(iouType=iouType) # parameters
-        self._paramsEval = {}               # parameters for evaluation
-        self.stats = []                     # result summarization
-        self.ious = {}                      # ious between all gts and dts
-        if not cocoGt is None:
+        self.cocoGt = cocoGt                    # ground truth COCO API
+        self.cocoDt = cocoDt                    # detections COCO API
+        self.params = {}                        # evaluation parameters
+        self.evalImgs = defaultdict(list)       # per-image per-category evaluation results [KxAxI] elements
+        self.eval = {}                          # accumulated evaluation results
+        self._gts = defaultdict(list)           # gt for evaluation
+        self._dts = defaultdict(list)           # dt for evaluation
+        self.params = Params(iouType=iouType)   # parameters
+        self._paramsEval = {}                   # parameters for evaluation
+        self.stats = []                         # result summarization
+        self.ious = {}                          # ious between all gts and dts
+        if cocoGt is not None:
             self.params.imgIds = sorted(cocoGt.getImgIds())
             self.params.catIds = sorted(cocoGt.getCatIds())
-
 
     def _prepare(self, id_setup):
         '''
@@ -52,20 +53,25 @@ class COCOeval:
         '''
         p = self.params
         if p.useCats:
-            gts=self.cocoGt.loadAnns(self.cocoGt.getAnnIds(imgIds=p.imgIds, catIds=p.catIds))
-            dts=self.cocoDt.loadAnns(self.cocoDt.getAnnIds(imgIds=p.imgIds, catIds=p.catIds))
+            gts = self.cocoGt.loadAnns(self.cocoGt.getAnnIds(imgIds=p.imgIds, catIds=p.catIds))
+            dts = self.cocoDt.loadAnns(self.cocoDt.getAnnIds(imgIds=p.imgIds, catIds=p.catIds))
         else:
-            gts=self.cocoGt.loadAnns(self.cocoGt.getAnnIds(imgIds=p.imgIds))
-            dts=self.cocoDt.loadAnns(self.cocoDt.getAnnIds(imgIds=p.imgIds))
+            gts = self.cocoGt.loadAnns(self.cocoGt.getAnnIds(imgIds=p.imgIds))
+            dts = self.cocoDt.loadAnns(self.cocoDt.getAnnIds(imgIds=p.imgIds))
 
         # set ignore flag
         for gt in gts:
             gt['ignore'] = gt['ignore'] if 'ignore' in gt else 0
             gbox = gt['bbox']
-            gt['ignore'] = 1 if (gt['height'] < self.params.HtRng[id_setup][0] or gt['height'] > self.params.HtRng[id_setup][1] or \
-               gt['occlusion'] not in self.params.OccRng[id_setup] or \
-               gbox[0] < self.params.bndRng[0] or gbox[1] < self.params.bndRng[1] or \
-               gbox[0]+gbox[2] > self.params.bndRng[2] or gbox[1]+gbox[3] > self.params.bndRng[3])  else gt['ignore']
+            gt['ignore'] = 1 \
+                if gt['height'] < self.params.HtRng[id_setup][0] \
+                or gt['height'] > self.params.HtRng[id_setup][1] \
+                or gt['occlusion'] not in self.params.OccRng[id_setup] \
+                or gbox[0] < self.params.bndRng[0] \
+                or gbox[1] < self.params.bndRng[1] \
+                or gbox[0] + gbox[2] > self.params.bndRng[2] \
+                or gbox[1] + gbox[3] > self.params.bndRng[3] \
+                else gt['ignore']
 
         self._gts = defaultdict(list)       # gt for evaluation
         self._dts = defaultdict(list)       # dt for evaluation
@@ -79,18 +85,17 @@ class COCOeval:
         #     self._dts[dt['image_id'], dt['category_id'], gt['id']].append(dt)
 
         self.evalImgs = defaultdict(list)   # per-image per-category evaluation results
-        self.eval     = {}                  # accumulated evaluation results
+        self.eval = {}                      # accumulated evaluation results
 
     def evaluate(self, id_setup):
         '''
         Run per image evaluation on given images and store results (a list of dict) in self.evalImgs
         :return: None
         '''
-        tic = time.time()
         # print('Running per image evaluation...')
         p = self.params
         # add backward compatibility if useSegm is specified in params
-        if not p.useSegm is None:
+        if p.useSegm is not None:
             p.iouType = 'segm' if p.useSegm == 1 else 'bbox'
             print('useSegm (deprecated) is not None. Running {} evaluation'.format(p.iouType))
         # print('Evaluate annotation type *{}*'.format(p.iouType))
@@ -98,7 +103,7 @@ class COCOeval:
         if p.useCats:
             p.catIds = list(np.unique(p.catIds))
         p.maxDets = sorted(p.maxDets)
-        self.params=p
+        self.params = p
 
         self._prepare(id_setup)
         # loop through images, area range, max detection number
@@ -106,38 +111,33 @@ class COCOeval:
 
         computeIoU = self.computeIoU
 
-        self.ious = {(imgId, catId): computeIoU(imgId, catId) \
-                        for imgId in p.imgIds
-                        for catId in catIds}
+        self.ious = {(imgId, catId): computeIoU(imgId, catId)
+                     for imgId in p.imgIds for catId in catIds}
 
         evaluateImg = self.evaluateImg
         maxDet = p.maxDets[-1]
         HtRng = self.params.HtRng[id_setup]
         OccRng = self.params.OccRng[id_setup]
         self.evalImgs = [evaluateImg(imgId, catId, HtRng, OccRng, maxDet)
-                 for catId in catIds
-                 for imgId in p.imgIds
-             ]
+                         for catId in catIds
+                         for imgId in p.imgIds]
 
         self._paramsEval = copy.deepcopy(self.params)
-        toc = time.time()
-        # print('DONE (t={:0.2f}s).'.format(toc-tic))
-
 
     def computeIoU(self, imgId, catId):
         p = self.params
         if p.useCats:
-            gt = self._gts[imgId,catId]
-            dt = self._dts[imgId,catId]
+            gt = self._gts[imgId, catId]
+            dt = self._dts[imgId, catId]
         else:
-            gt = [_ for cId in p.catIds for _ in self._gts[imgId,cId]]
-            dt = [_ for cId in p.catIds for _ in self._dts[imgId,cId]]
-        if len(gt) == 0 and len(dt) ==0:
+            gt = [_ for cId in p.catIds for _ in self._gts[imgId, cId]]
+            dt = [_ for cId in p.catIds for _ in self._dts[imgId, cId]]
+        if len(gt) == 0 and len(dt) == 0:
             return []
         inds = np.argsort([-d['score'] for d in dt], kind='mergesort')
         dt = [dt[i] for i in inds]
         if len(dt) > p.maxDets[-1]:
-            dt=dt[0:p.maxDets[-1]]
+            dt = dt[0:p.maxDets[-1]]
 
         if p.iouType == 'segm':
             g = [g['segmentation'] for g in gt]
@@ -148,13 +148,12 @@ class COCOeval:
         else:
             raise Exception('unknown iouType for iou computation')
 
-
         # compute iou between each dt and gt region
         iscrowd = [int(o['ignore']) for o in gt]
-        ious = self.iou(d,g,iscrowd)
+        ious = self.iou(d, g, iscrowd)
         return ious
 
-    def iou( self, dts, gts, pyiscrowd ):
+    def iou(self, dts, gts, pyiscrowd):
         dts = np.asarray(dts)
         gts = np.asarray(gts)
         pyiscrowd = np.asarray(pyiscrowd)
@@ -172,10 +171,10 @@ class COCOeval:
                 dy2 = dt[1] + dt[3]
                 darea = dt[2] * dt[3]
 
-                unionw = min(dx2,gx2)-max(dx1,gx1)
+                unionw = min(dx2, gx2) - max(dx1, gx1)
                 if unionw <= 0:
                     continue
-                unionh = min(dy2,gy2)-max(dy1,gy1)
+                unionh = min(dy2, gy2) - max(dy1, gy1)
                 if unionh <= 0:
                     continue
                 t = unionw * unionh
@@ -184,10 +183,8 @@ class COCOeval:
                 else:
                     unionarea = darea + garea - t
 
-                ious[i, j] = float(t)/unionarea
+                ious[i, j] = float(t) / unionarea
         return ious
-
-
 
     def evaluateImg(self, imgId, catId, hRng, oRng, maxDet):
         '''
@@ -197,13 +194,13 @@ class COCOeval:
         try:
             p = self.params
             if p.useCats:
-                gt = self._gts[imgId,catId]
-                dt = self._dts[imgId,catId]
+                gt = self._gts[imgId, catId]
+                dt = self._dts[imgId, catId]
             else:
-                gt = [_ for cId in p.catIds for _ in self._gts[imgId,cId]]
-                dt = [_ for cId in p.catIds for _ in self._dts[imgId,cId]]
+                gt = [_ for cId in p.catIds for _ in self._gts[imgId, cId]]
+                dt = [_ for cId in p.catIds for _ in self._dts[imgId, cId]]
             
-            if len(gt) == 0 and len(dt) ==0:
+            if len(gt) == 0 and len(dt) == 0:
                 return None
 
             for g in gt:
@@ -223,37 +220,37 @@ class COCOeval:
 
             # load computed ious        
             ious = self.ious[imgId, catId][dtind, :] if len(self.ious[imgId, catId]) > 0 else self.ious[imgId, catId]
-            ious = ious[:,gtind]
+            ious = ious[:, gtind]
 
             T = len(p.iouThrs)
             G = len(gt)
             D = len(dt)
-            gtm  = np.zeros((T,G))
-            dtm  = np.zeros((T,D))
+            gtm = np.zeros((T, G))
+            dtm = np.zeros((T, D))
             gtIg = np.array([g['_ignore'] for g in gt])
-            dtIg = np.zeros((T,D))
+            dtIg = np.zeros((T, D))
 
-            if not len(ious)==0:
+            if not len(ious) == 0:
                 for tind, t in enumerate(p.iouThrs):
                     for dind, d in enumerate(dt):
                         # information about best match so far (m=-1 -> unmatched)
-                        iou = min([t,1-1e-10])
+                        iou = min([t, 1 - 1e-10])
                         bstOa = iou
                         bstg = -2
                         bstm = -2
                         for gind, g in enumerate(gt):
-                            m = gtm[tind,gind]
+                            m = gtm[tind, gind]
                             # if this gt already matched, and not a crowd, continue
-                            if m>0:
+                            if m > 0:
                                 continue
                             # if dt matched to reg gt, and on ignore gt, stop
-                            if bstm!=-2 and gtIg[gind] == 1:
+                            if bstm != -2 and gtIg[gind] == 1:
                                 break
                             # continue to next gt unless better match made
-                            if ious[dind,gind] < bstOa:
+                            if ious[dind, gind] < bstOa:
                                 continue
                             # if match successful and best so far, store appropriately
-                            bstOa=ious[dind,gind]
+                            bstOa = ious[dind, gind]
                             bstg = gind
                             if gtIg[gind] == 0:
                                 bstm = 1
@@ -261,16 +258,14 @@ class COCOeval:
                                 bstm = -1
 
                         # if match made store id of match for both dt and gt
-                        if bstg ==-2:
+                        if bstg == -2:
                             continue
-                        dtIg[tind,dind] = gtIg[bstg]
-                        dtm[tind,dind]  = gt[bstg]['id']
+                        dtIg[tind, dind] = gtIg[bstg]
+                        dtm[tind, dind] = gt[bstg]['id']
                         if bstm == 1:
-                            gtm[tind,bstg]     = d['id']
+                            gtm[tind, bstg] = d['id']
 
-
-        except Exception as ex:
-            import traceback, sys
+        except Exception:
 
             ex_type, ex_value, ex_traceback = sys.exc_info()            
 
@@ -284,71 +279,68 @@ class COCOeval:
                 stack_trace.append("File : %s , Line : %d, Func.Name : %s, Message : %s" % (trace[0], trace[1], trace[2], trace[3]))
 
             sys.stderr.write("[Error] Exception type : %s \n" % ex_type.__name__)
-            sys.stderr.write("[Error] Exception message : %s \n" %ex_value)
+            sys.stderr.write("[Error] Exception message : %s \n" % ex_value)
             for trace in stack_trace:
                 sys.stderr.write("[Error] (Stack trace) %s\n" % trace)
 
-            import pdb;pdb.set_trace()
-
-
+            pdb.set_trace()
 
         # store results for given image and category
         return {
-                'image_id':     imgId,
-                'category_id':  catId,
-                'hRng':         hRng,
-                'oRng':         oRng,
-                'maxDet':       maxDet,
-                'dtIds':        [d['id'] for d in dt],
-                'gtIds':        [g['id'] for g in gt],
-                'dtMatches':    dtm,
-                'gtMatches':    gtm,
-                'dtScores':     [d['score'] for d in dt],
-                'gtIgnore':     gtIg,
-                'dtIgnore':     dtIg,
-            }
+            'image_id': imgId,
+            'category_id': catId,
+            'hRng': hRng,
+            'oRng': oRng,
+            'maxDet': maxDet,
+            'dtIds': [d['id'] for d in dt],
+            'gtIds': [g['id'] for g in gt],
+            'dtMatches': dtm,
+            'gtMatches': gtm,
+            'dtScores': [d['score'] for d in dt],
+            'gtIgnore': gtIg,
+            'dtIgnore': dtIg,
+        }
 
-    def accumulate(self, p = None):
+    def accumulate(self, p=None):
         '''
         Accumulate per image evaluation results and store the result in self.eval
         :param p: input params for evaluation
         :return: None
         '''
         # print('Accumulating evaluation results...')
-        tic = time.time()
         if not self.evalImgs:
             print('Please run evaluate() first')
         # allows input customized parameters
         if p is None:
             p = self.params
         p.catIds = p.catIds if p.useCats == 1 else [-1]
-        T           = len(p.iouThrs)
-        R           = len(p.fppiThrs)
-        K           = len(p.catIds) if p.useCats else 1
-        M           = len(p.maxDets)
-        ys   = -np.ones((T,R,K,M)) # -1 for the precision of absent categories
+        T = len(p.iouThrs)
+        R = len(p.fppiThrs)
+        K = len(p.catIds) if p.useCats else 1
+        M = len(p.maxDets)
+        ys = -np.ones((T, R, K, M))     # -1 for the precision of absent categories
 
         xx_graph = []
         yy_graph = []
 
         # create dictionary for future indexing
         _pe = self._paramsEval
-        catIds = [1] #_pe.catIds if _pe.useCats else [-1]
+        catIds = [1]                    # _pe.catIds if _pe.useCats else [-1]
         setK = set(catIds)
         setM = set(_pe.maxDets)
         setI = set(_pe.imgIds)
         # get inds to evaluate
-        k_list = [n for n, k in enumerate(p.catIds)  if k in setK]
+        k_list = [n for n, k in enumerate(p.catIds) if k in setK]
         m_list = [m for n, m in enumerate(p.maxDets) if m in setM]
-        i_list = [n for n, i in enumerate(p.imgIds)  if i in setI]
+        i_list = [n for n, i in enumerate(p.imgIds) if i in setI]
         I0 = len(_pe.imgIds)
         
         # retrieve E at each category, area range, and max number of detections
         for k, k0 in enumerate(k_list):
-            Nk = k0*I0
+            Nk = k0 * I0
             for m, maxDet in enumerate(m_list):
                 E = [self.evalImgs[Nk + i] for i in i_list]
-                E = [e for e in E if not e is None]
+                E = [e for e in E if e is not None]
                 if len(E) == 0:
                     continue
 
@@ -367,23 +359,22 @@ class COCOeval:
                     continue
                 tps = np.logical_and(dtm, np.logical_not(dtIg))
                 fps = np.logical_and(np.logical_not(dtm), np.logical_not(dtIg))
-                inds = np.where(dtIg==0)[1]
-                tps = tps[:,inds]
-                fps = fps[:,inds]
+                inds = np.where(dtIg == 0)[1]
+                tps = tps[:, inds]
+                fps = fps[:, inds]
 
                 tp_sum = np.cumsum(tps, axis=1).astype(dtype=np.float64)
                 fp_sum = np.cumsum(fps, axis=1).astype(dtype=np.float64)
-
             
                 for t, (tp, fp) in enumerate(zip(tp_sum, fp_sum)):
                     tp = np.array(tp)
-                    fppi = np.array(fp)/I0
+                    fppi = np.array(fp) / I0
                     nd = len(tp)
                     recall = tp / npig
                     q = np.zeros((R,))
 
-                    xx_graph.append( fppi )
-                    yy_graph.append( 1-recall )
+                    xx_graph.append(fppi)
+                    yy_graph.append(1 - recall)
 
                     # numpy is slow without cython optimization for accessing elements
                     # use python array gets significant speed improvement
@@ -398,35 +389,33 @@ class COCOeval:
                     try:
                         for ri, pi in enumerate(inds):
                             q[ri] = recall[pi]
-                    except:
+                    except Exception:
                         pass
-                    ys[t,:,k,m] = np.array(q)
+                    ys[t, :, k, m] = np.array(q)
         
         self.eval = {
             'params': p,
             'counts': [T, R, K, M],
             'date': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'TP':   ys,
+            'TP': ys,
             'xx': xx_graph,
             'yy': yy_graph
         }
-        toc = time.time()
-        # print('DONE (t={:0.2f}s).'.format( toc-tic))
-
 
     def draw_figure(self, ax, filename='result.jpg'):
-        ### Draw
+        """Draw figure"""
 
         mrs = 1 - self.eval['TP']
-        mean_s = np.log(mrs[mrs<2])
+        mean_s = np.log(mrs[mrs < 2])
         mean_s = np.mean(mean_s)
-        mean_s = float( np.exp(mean_s) * 100 )
+        mean_s = float(np.exp(mean_s) * 100)
 
-        xx = self.eval['xx']
-        yy = self.eval['yy']
+        # xx = self.eval['xx']
+        # yy = self.eval['yy']
 
         ax.cla()
         return mean_s
+
         # ax.plot( xx[0], yy[0], linewidth=3, label='{:.2f}%, {:s}'.format(mean_s, os.path.basename(filename)) )
         # ax.set_yscale('log')
         # ax.set_xscale('log')
@@ -448,13 +437,12 @@ class COCOeval:
         # plt.xlabel('false positives per image')
         # plt.savefig(filename)
 
-
-    def summarize(self,id_setup, res_file=None):
+    def summarize(self, id_setup, res_file=None):
         '''
         Compute and display summary metrics for evaluation results.
         Note this functin can *only* be applied on the default parameter setting
         '''
-        def _summarize(iouThr=None, maxDets=100 ):  
+        def _summarize(iouThr=None, maxDets=100):
             OCC_TO_TEXT = ['none', 'partial_occ', 'heavy_occ']
 
             p = self.params
@@ -465,7 +453,7 @@ class COCOeval:
             iouStr = '{:0.2f}:{:0.2f}'.format(p.iouThrs[0], p.iouThrs[-1]) \
                 if iouThr is None else '{:0.2f}'.format(iouThr)
             heightStr = '[{:0.0f}:{:0.0f}]'.format(p.HtRng[id_setup][0], p.HtRng[id_setup][1])
-            occlStr = '[' + '+'.join([ '{:s}'.format(OCC_TO_TEXT[occ]) for occ in p.OccRng[id_setup] ]) + ']'
+            occlStr = '[' + '+'.join(['{:s}'.format(OCC_TO_TEXT[occ]) for occ in p.OccRng[id_setup]]) + ']'
 
             mind = [i for i, mDet in enumerate(p.maxDets) if mDet == maxDets]
 
@@ -475,28 +463,29 @@ class COCOeval:
             if iouThr is not None:
                 t = np.where(iouThr == p.iouThrs)[0]
                 s = s[t]
-            mrs = 1-s[:,:,:,mind]
+            mrs = 1 - s[:, :, :, mind]
 
-            if len(mrs[mrs<2])==0:
+            if len(mrs[mrs < 2]) == 0:
                 mean_s = -1
             else:
-                mean_s = np.log(mrs[mrs<2])
+                mean_s = np.log(mrs[mrs < 2])
                 mean_s = np.mean(mean_s)
                 mean_s = np.exp(mean_s)
             # print(iStr.format(titleStr, typeStr,setupStr, iouStr, heightStr, occlStr, mean_s*100))
 
             if res_file:
-                res_file.write(iStr.format(titleStr, typeStr,setupStr, iouStr, heightStr, occlStr, mean_s*100))
+                res_file.write(iStr.format(titleStr, typeStr, setupStr, iouStr, heightStr, occlStr, mean_s * 100))
                 res_file.write('\n')
             return mean_s
 
         if not self.eval:
             raise Exception('Please run accumulate() first')
         
-        return _summarize(iouThr=.5,maxDets=1000)
+        return _summarize(iouThr=.5, maxDets=1000)
 
     def __str__(self):
         self.summarize()
+
 
 class Params:
     '''
@@ -508,18 +497,17 @@ class Params:
         # np.arange causes trouble.  the data point on arange is slightly larger than the true value
 
         self.recThrs = np.linspace(.0, 1.00, int(np.round((1.00 - .0) / .01) + 1), endpoint=True)
-        self.fppiThrs = np.array([0.0100,    0.0178,    0.0316,    0.0562,    0.1000,    0.1778,    0.3162,    0.5623,    1.0000])
+        self.fppiThrs = np.array([0.0100, 0.0178, 0.0316, 0.0562, 0.1000, 0.1778, 0.3162, 0.5623, 1.0000])
         self.maxDets = [1000]
         self.useCats = 1
 
         self.iouThrs = np.array([0.5])  # np.linspace(.5, 0.95, np.round((0.95 - .5) / .05) + 1, endpoint=True)
 
-        self.HtRng = [[55, 1e5 ** 2], [50,75], [50, 1e5 ** 2], [20, 1e5 ** 2]]
+        self.HtRng = [[55, 1e5 ** 2], [50, 75], [50, 1e5 ** 2], [20, 1e5 ** 2]]
         self.OccRng = [[0, 1], [0, 1], [2], [0, 1, 2]]
-        self.SetupLbl = ['Reasonable', 'Reasonable_small','Reasonable_occ=heavy', 'All']
+        self.SetupLbl = ['Reasonable', 'Reasonable_small', 'Reasonable_occ=heavy', 'All']
 
-        self.bndRng = [5, 5, 635, 507];     # discard bbs outside this pixel range
-
+        self.bndRng = [5, 5, 635, 507]  # discard bbs outside this pixel range
 
     def __init__(self, iouType='segm'):
         if iouType == 'segm' or iouType == 'bbox':
@@ -530,6 +518,7 @@ class Params:
         # useSegm is deprecated
         self.useSegm = None
 
+
 class COCO:
     def __init__(self, annotation_file=None):
         """
@@ -539,13 +528,12 @@ class COCO:
         :return:
         """
         # load dataset
-        self.dataset,self.anns,self.cats,self.imgs = dict(),dict(),dict(),dict()
+        self.dataset, self.anns, self.cats, self.imgs = dict(), dict(), dict(), dict()
         self.imgToAnns, self.catToImgs = defaultdict(list), defaultdict(list)
-        if not annotation_file == None:
+        if annotation_file is not None:
             # print('loading annotations into memory...')
-            tic = time.time()
             dataset = json.load(open(annotation_file, 'r'))
-            assert type(dataset)==dict, 'annotation file format {} not supported'.format(type(dataset))
+            assert type(dataset) == dict, 'annotation file format {} not supported'.format(type(dataset))
             # print('Done (t={:0.2f}s)'.format(time.time()- tic))
             self.dataset = dataset
             self.createIndex()
@@ -554,7 +542,7 @@ class COCO:
         # create index
         # print('creating index...')
         anns, cats, imgs = {}, {}, {}
-        imgToAnns,catToImgs = defaultdict(list),defaultdict(list)
+        imgToAnns, catToImgs = defaultdict(list), defaultdict(list)
         if 'annotations' in self.dataset:
             for ann in self.dataset['annotations']:
                 imgToAnns[ann['image_id']].append(ann)
@@ -609,9 +597,9 @@ class COCO:
                 anns = list(itertools.chain.from_iterable(lists))
             else:
                 anns = self.dataset['annotations']
-            anns = anns if len(catIds)  == 0 else [ann for ann in anns if ann['category_id'] in catIds]
+            anns = anns if len(catIds) == 0 else [ann for ann in anns if ann['category_id'] in catIds]
             anns = anns if len(areaRng) == 0 else [ann for ann in anns if ann['area'] > areaRng[0] and ann['area'] < areaRng[1]]
-        if not iscrowd == None:
+        if iscrowd is not None:
             ids = [ann['id'] for ann in anns if ann['iscrowd'] == iscrowd]
         else:
             ids = [ann['id'] for ann in anns]
@@ -633,9 +621,9 @@ class COCO:
             cats = self.dataset['categories']
         else:
             cats = self.dataset['categories']
-            cats = cats if len(catNms) == 0 else [cat for cat in cats if cat['name']          in catNms]
+            cats = cats if len(catNms) == 0 else [cat for cat in cats if cat['name'] in catNms]
             cats = cats if len(supNms) == 0 else [cat for cat in cats if cat['supercategory'] in supNms]
-            cats = cats if len(catIds) == 0 else [cat for cat in cats if cat['id']            in catIds]
+            cats = cats if len(catIds) == 0 else [cat for cat in cats if cat['id'] in catIds]
         ids = [cat['id'] for cat in cats]
         return ids
 
@@ -713,12 +701,12 @@ class COCO:
             polygons = []
             color = []
             for ann in anns:
-                c = (np.random.random((1, 3))*0.6+0.4).tolist()[0]
+                c = (np.random.random((1, 3)) * 0.6 + 0.4).tolist()[0]
                 if 'segmentation' in ann:
                     if type(ann['segmentation']) == list:
                         # polygon
                         for seg in ann['segmentation']:
-                            poly = np.array(seg).reshape((int(len(seg)/2), 2))
+                            poly = np.array(seg).reshape((int(len(seg) / 2), 2))
                             polygons.append(Polygon(poly))
                             color.append(c)
                     else:
@@ -729,36 +717,37 @@ class COCO:
                         else:
                             rle = [ann['segmentation']]
                         m = maskUtils.decode(rle)
-                        img = np.ones( (m.shape[0], m.shape[1], 3) )
+                        img = np.ones((m.shape[0], m.shape[1], 3))
                         if ann['iscrowd'] == 1:
-                            color_mask = np.array([2.0,166.0,101.0])/255
+                            color_mask = np.array([2.0, 166.0, 101.0]) / 255
                         if ann['iscrowd'] == 0:
                             color_mask = np.random.random((1, 3)).tolist()[0]
                         for i in range(3):
-                            img[:,:,i] = color_mask[i]
-                        ax.imshow(np.dstack( (img, m*0.5) ))
+                            img[:, :, i] = color_mask[i]
+                        ax.imshow(np.dstack((img, m * 0.5)))
                 if 'keypoints' in ann and type(ann['keypoints']) == list:
                     # turn skeleton into zero-based index
-                    sks = np.array(self.loadCats(ann['category_id'])[0]['skeleton'])-1
+                    sks = np.array(self.loadCats(ann['category_id'])[0]['skeleton']) - 1
                     kp = np.array(ann['keypoints'])
                     x = kp[0::3]
                     y = kp[1::3]
                     v = kp[2::3]
                     for sk in sks:
-                        if np.all(v[sk]>0):
-                            plt.plot(x[sk],y[sk], linewidth=3, color=c)
-                    plt.plot(x[v>0], y[v>0],'o',markersize=8, markerfacecolor=c, markeredgecolor='k',markeredgewidth=2)
-                    plt.plot(x[v>1], y[v>1],'o',markersize=8, markerfacecolor=c, markeredgecolor=c, markeredgewidth=2)
+                        if np.all(v[sk] > 0):
+                            plt.plot(x[sk], y[sk], linewidth=3, color=c)
+                    plt.plot(x[v > 0], y[v > 0], 'o',
+                             markersize=8, markerfacecolor=c, markeredgecolor='k', markeredgewidth=2)
+                    plt.plot(x[v > 1], y[v > 1], 'o',
+                             markersize=8, markerfacecolor=c, markeredgecolor=c, markeredgewidth=2)
             # p = PatchCollection(polygons, facecolor=color, linewidths=0, alpha=0.4)
-            ax.add_collection(p)
+            # ax.add_collection(p)
             # p = PatchCollection(polygons, facecolor='none', edgecolors=color, linewidths=2)
-            ax.add_collection(p)
+            # ax.add_collection(p)
         elif datasetType == 'captions':
             for ann in anns:
                 print(ann['caption'])
 
-    ############# ADDADADADDD #################
-
+    ##################################################
     def txt2json(self, txt):
         """
         Evlautes txt file that covert coco json format
@@ -771,15 +760,14 @@ class COCO:
         lines = f.readlines()
         for line in lines:
             json_format = {}
-            pred_info = [float(l) for l in line.split(',')]
-            json_format["image_id"] = pred_info[0] - 1 # image id
-            json_format["category_id"] = 1 # pedestrian
-            json_format["bbox"] = [pred_info[1] , pred_info[2], pred_info[3], pred_info[4]] # bbox 
+            pred_info = [float(ll) for ll in line.split(',')]
+            json_format["image_id"] = pred_info[0] - 1                                      # image id
+            json_format["category_id"] = 1                                                  # pedestrian
+            json_format["bbox"] = [pred_info[1], pred_info[2], pred_info[3], pred_info[4]]  # bbox
             json_format["score"] = pred_info[5]
 
             predict_result.append(json_format)
         return predict_result
-
     ##################################################
 
     def loadRes(self, resFile):
@@ -792,15 +780,17 @@ class COCO:
         res.dataset['images'] = [img for img in self.dataset['images']]
 
         # print('Loading and preparing results...')
-        tic = time.time()
-        if type(resFile) == str or type(resFile) == unicode:
+
+        # Python 3 renamed the unicode type to str
+        if type(resFile) == str or type(resFile) == str:
             
-            #### ADDADADADDD!!! ######
+            ##################################################
             file_ext = resFile.split('/')[-1].split('.')[-1]
             if file_ext == 'txt':
                 anns = self.txt2json(resFile)
-            else: anns = json.load(open(resFile))
-            #### ADDADADADDD!!! ######
+            else:
+                anns = json.load(open(resFile))
+            ##################################################
 
         elif type(resFile) == np.ndarray:
             anns = self.loadNumpyAnnotations(resFile)
@@ -815,27 +805,27 @@ class COCO:
             imgIds = set([img['id'] for img in res.dataset['images']]) & set([ann['image_id'] for ann in anns])
             res.dataset['images'] = [img for img in res.dataset['images'] if img['id'] in imgIds]
             for id, ann in enumerate(anns):
-                ann['id'] = id+1
+                ann['id'] = id + 1
         elif 'bbox' in anns[0] and not anns[0]['bbox'] == []:
             res.dataset['categories'] = copy.deepcopy(self.dataset['categories'])
 
             for id, ann in enumerate(anns):
                 bb = ann['bbox']
-                x1, x2, y1, y2 = [bb[0], bb[0]+bb[2], bb[1], bb[1]+bb[3]]
-                if not 'segmentation' in ann:
+                x1, x2, y1, y2 = [bb[0], bb[0] + bb[2], bb[1], bb[1] + bb[3]]
+                if 'segmentation' not in ann:
                     ann['segmentation'] = [[x1, y1, x1, y2, x2, y2, x2, y1]]
-                ann['area'] = bb[2]*bb[3]
+                ann['area'] = bb[2] * bb[3]
                 ann['height'] = bb[3]
-                ann['id'] = id+1
+                ann['id'] = id + 1
                 ann['iscrowd'] = 0
         elif 'segmentation' in anns[0]:
             res.dataset['categories'] = copy.deepcopy(self.dataset['categories'])
             for id, ann in enumerate(anns):
                 # now only support compressed RLE format as segmentation results
                 ann['area'] = maskUtils.area(ann['segmentation'])
-                if not 'bbox' in ann:
+                if 'bbox' not in ann:
                     ann['bbox'] = maskUtils.toBbox(ann['segmentation'])
-                ann['id'] = id+1
+                ann['id'] = id + 1
                 ann['iscrowd'] = 0
         elif 'keypoints' in anns[0]:
             res.dataset['categories'] = copy.deepcopy(self.dataset['categories'])
@@ -843,17 +833,17 @@ class COCO:
                 s = ann['keypoints']
                 x = s[0::3]
                 y = s[1::3]
-                x0,x1,y0,y1 = np.min(x), np.max(x), np.min(y), np.max(y)
-                ann['area'] = (x1-x0)*(y1-y0)
+                x0, x1, y0, y1 = np.min(x), np.max(x), np.min(y), np.max(y)
+                ann['area'] = (x1 - x0) * (y1 - y0)
                 ann['id'] = id + 1
-                ann['bbox'] = [x0,y0,x1-x0,y1-y0]
+                ann['bbox'] = [x0, y0, x1 - x0, y1 - y0]
         # print('DONE (t={:0.2f}s)'.format(time.time()- tic))
 
         res.dataset['annotations'] = anns
         res.createIndex()
         return res
 
-    def download(self, tarDir = None, imgIds = [] ):
+    def download(self, tarDir=None, imgIds=[]):
         '''
         Download COCO images from mscoco.org server.
         :param tarDir (str): COCO results directory name
@@ -875,7 +865,7 @@ class COCO:
             fname = os.path.join(tarDir, img['file_name'])
             if not os.path.exists(fname):
                 urlretrieve(img['coco_url'], fname)
-            print('downloaded {}/{} images (t={:0.1f}s)'.format(i, N, time.time()- tic))
+            print('downloaded {}/{} images (t={:0.1f}s)'.format(i, N, time.time() - tic))
 
     def loadNumpyAnnotations(self, data):
         """
@@ -891,13 +881,13 @@ class COCO:
         ann = []
         for i in range(N):
             if i % 1000000 == 0:
-                print('{}/{}'.format(i,N))
+                print('{}/{}'.format(i, N))
             ann += [{
-                'image_id'  : int(data[i, 0]),
-                'bbox'  : [ data[i, 1], data[i, 2], data[i, 3], data[i, 4] ],
-                'score' : data[i, 5],
+                'image_id': int(data[i, 0]),
+                'bbox': [data[i, 1], data[i, 2], data[i, 3], data[i, 4]],
+                'score': data[i, 5],
                 'category_id': int(data[i, 6]),
-                }]
+            }]
         return ann
 
     def annToRLE(self, ann):
@@ -948,25 +938,24 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename='Multisp
     imgIds = sorted(cocoGt.getImgIds())
     cocoEval = COCOeval(cocoGt, cocoDt, 'bbox')
 
-    cocoEval.params.catIds  = [1]    
+    cocoEval.params.catIds = [1]
 
-    ### all
-    cocoEval.params.imgIds  = imgIds
+    # all
+    cocoEval.params.imgIds = imgIds
     cocoEval.evaluate(0)
     cocoEval.accumulate()
     MR_all = cocoEval.summarize(0)    
 
-    recall = 1-cocoEval.eval['yy'][0][-1] 
+    recall = 1 - cocoEval.eval['yy'][0][-1]
 
-    ### night
-    cocoEval.params.imgIds  = imgIds[1455:]
+    # night
+    cocoEval.params.imgIds = imgIds[1455:]
     cocoEval.evaluate(0)
     cocoEval.accumulate()
     MR_night = cocoEval.summarize(0)    
 
-
-    ### day
-    cocoEval.params.imgIds  = imgIds[:1455]
+    # day
+    cocoEval.params.imgIds = imgIds[:1455]
     cocoEval.evaluate(0)
     cocoEval.accumulate()
     MR_day = cocoEval.summarize(0)    
@@ -976,10 +965,10 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename='Multisp
     output["result"] = [
         {
             phase_codename: {
-                "MR(all)": MR_all*100,
-                "MR(day)": MR_day*100,
-                "MR(night)": MR_night*100,
-                "Recall": recall*100,
+                "MR(all)": MR_all * 100,
+                "MR(day)": MR_day * 100,
+                "MR(night)": MR_night * 100,
+                "Recall": recall * 100,
 
             }
         },
@@ -990,7 +979,8 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename='Multisp
     return output
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
+    import pprint
 
     parser = argparse.ArgumentParser(description='eval models')
     parser.add_argument('--annFile', type=str, default='./KAIST_annotation.json',
@@ -1002,7 +992,5 @@ if __name__=="__main__":
     phase = "Multispectral"
     result = evaluate(args.annFile, args.rstFile, phase)
 
-    import pprint
-    
     pp = pprint.PrettyPrinter(indent=4)
     pp.pprint(result['result'][0][phase])
