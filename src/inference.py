@@ -71,7 +71,7 @@ def run_inference(model_path: str, fdz_case: str) -> Dict:
 
             # Detect objects in SSD output
             detections = model.module.detect_objects(predicted_locs, predicted_scores,
-                                                     min_score=0.1, max_overlap=0.45, top_k=200)
+                                                     min_score=0.1, max_overlap=0.425, top_k=200)
 
             det_boxes_batch, det_labels_batch, det_scores_batch = detections[:3]
 
