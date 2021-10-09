@@ -140,7 +140,8 @@ If you want to skip the training process, download the pre-trained model and pla
 Try below command to get inference from pretrained model
 
 ```bash
-$ python src/inference.py --FDZ original --model-path pretrained/best_checkpoint.pth.tar
+$ cd src
+$ python inference.py --FDZ original --model-path ../pretrained/best_checkpoint.pth.tar
 
 ```
 
