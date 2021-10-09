@@ -4,7 +4,6 @@ import argparse
 import config
 # import importlib
 import numpy as np
-import os
 
 import torch
 import torch.nn as nn
@@ -42,20 +41,21 @@ def run_inference(model_path: str, fdz_case: str) -> Dict:
     model.eval()
 
     input_size = config.test.input_size
-    input_h, input_w = input_size
-    xyxy_scaler_np = np.array([[input_w, input_h, input_w, input_h]], dtype=np.float32)
+    height, width = input_size
+    xyxy_scaler_np = np.array([[width, height, width, height]], dtype=np.float32)
 
     # Load dataloader for Fusion Dead Zone experiment
-    FDZ = [FusionDeadZone(fdz_case, tuple(input_size)) ]
+    FDZ = [FusionDeadZone(fdz_case, tuple(input_size))]
     config.test.img_transform.add(FDZ)
 
     args = config.args
+    batch_size = config.test.batch_size * torch.cuda.device_count()
     test_dataset = KAISTPed(args, condition="test")
     test_loader = torch.utils.data.DataLoader(test_dataset,
-                                                batch_size=config.test.batch_size * torch.cuda.device_count(),
-                                                num_workers=args.dataset.workers,
-                                                collate_fn=test_dataset.collate_fn,
-                                                pin_memory=True)
+                                              batch_size=batch_size,
+                                              num_workers=args.dataset.workers,
+                                              collate_fn=test_dataset.collate_fn,
+                                              pin_memory=True)
     print(test_loader)
 
     results = dict()
@@ -71,24 +71,25 @@ def run_inference(model_path: str, fdz_case: str) -> Dict:
 
             # Detect objects in SSD output
             detections = model.module.detect_objects(predicted_locs, predicted_scores,
-                                       min_score=0.1, max_overlap=0.45, top_k=200)
+                                                     min_score=0.1, max_overlap=0.45, top_k=200)
 
             det_boxes_batch, det_labels_batch, det_scores_batch = detections[:3]
 
-            for boxes_t, labels_t, scores_t, image_id in zip(det_boxes_batch ,det_labels_batch, det_scores_batch, indices):
+            for boxes_t, labels_t, scores_t, image_id in zip(det_boxes_batch, det_labels_batch, det_scores_batch, indices):
                 boxes_np = boxes_t.cpu().numpy().reshape(-1, 4)
                 scores_np = scores_t.cpu().numpy().mean(axis=1).reshape(-1, 1)
 
                 # TODO(sohwang): check if labels are required
-                labels_np = labels_t.cpu().numpy().reshape(-1, 1)
+                # labels_np = labels_t.cpu().numpy().reshape(-1, 1)
 
                 xyxy_np = boxes_np * xyxy_scaler_np
                 xywh_np = xyxy_np
                 xywh_np[:, 2] -= xywh_np[:, 0]
                 xywh_np[:, 3] -= xywh_np[:, 1]
 
-                results[image_id.item()+1] = np.hstack([xywh_np, scores_np])
+                results[image_id.item() + 1] = np.hstack([xywh_np, scores_np])
     return results
+
 
 def save_results(results: Dict, result_filename: str):
     """Save detections
@@ -130,7 +131,7 @@ if __name__ == '__main__':
 
     assert arguments.model_path or arguments.result_file, "Please specify '--model-path' or '--results-file'"
     if arguments.model_path and arguments.result_file:
-        print(f'Both --model-path and --results-file are specified. Ignore --model-path.')
+        print('Both --model-path and --results-file are specified. Ignore --model-path.')
         arguments.model_path = None
 
     print(arguments)
@@ -148,7 +149,6 @@ if __name__ == '__main__':
 
         # Save results
         save_results(results, result_filename)
-
 
     # TODO(sohwang): Load results
 
