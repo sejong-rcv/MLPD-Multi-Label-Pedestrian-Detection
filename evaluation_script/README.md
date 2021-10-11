@@ -10,14 +10,13 @@ For annotations file, only json is supported, and for result files, json and txt
 Example)
 
 ```bash
-$ python evaluation_script/evaluation_script.py \
-	--annFile evaluation_script/KAIST_annotation.json \
-	--rstFile evaluation_script/MLPD_result.txt \
-			  evaluation_script/ARCNN_result.txt \
-			  evaluation_script/CIAN_result.txt \
-			  evaluation_script/MSDS-RCNN_result.txt \
-			  evaluation_script/MBNet_result.txt \
-	--evalFigure figure.jpg
+$ python evaluation_script.py \
+	--annFile KAIST_annotation.json \
+	--rstFile state_of_arts/MLPD_result.txt \
+			  state_of_arts/ARCNN_result.txt \
+			  state_of_arts/CIAN_result.txt \
+			  state_of_arts/MSDS-RCNN_result.txt \
+			  state_of_arts/MBNet_result.txt \
+	--evalFig KASIT_BENCHMARK.jpg
 ```
-
-![result img](../figure.jpg)
+![result img](../Doc/figure/figure.jpg)

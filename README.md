@@ -9,7 +9,7 @@ Multispectral pedestrian detection has been actively studied as a promising mult
 not paired. To this end, we propose a novel single-stage detection framework that leverages multi-label learning to learn input state-aware features by assigning a separate label according to the given state of the input image pair. We also present a novel augmentation strategy
 by applying geometric transformations to synthesize the unpaired multispectral images. In extensive experiments, we demonstrate the efficacy of the proposed method under various real-world conditions, such as fully-overlapped images and partially-overlapped images, in stereo-vision.
 
-![demo](./video.gif)
+![demo](./Doc/figure/video.gif)
 
 
 ### Results
@@ -27,6 +27,7 @@ by applying geometric transformations to synthesize the unpaired multispectral i
 | MLPD (Ours) | VGG16 | 7.58 | 7.95 | 6.95 |
 | MLPD (Ours) | ResNet50 | 7.61 | 8.36 | 6.35 |
 
+![FPPI KIAS Benchmark](./Doc/figure/figure.jpg)
 
 
 ## Contents
@@ -134,7 +135,34 @@ If you want to skip the training process, download the pre-trained model and pla
 - [Pretrained Model](https://drive.google.com/file/d/1smXP4xpSDYC8cL_bbT9-E2aywROLlC2v/view?usp=sharing)
 
 ### Evaluation
+
 `python eval.py`
+
+### Evaluation Benchmark
+
+You can evaluate the result files of the models with code.
+
+We draw all the results of state-of-the-art methods in a single figure to make it easy to compare, and the figure represents the miss-rate against false positives per image.
+
+For annotations file, only json is supported, and for result files, json and txt formats are supported.
+(multiple `--rstFiles` are supported)
+
+```bash
+cd evaluation_script
+
+```bash
+$ python evaluation_script.py \
+	--annFile KAIST_annotation.json \
+	--rstFile state_of_arts/MLPD_result.txt \
+			  state_of_arts/ARCNN_result.txt \
+			  state_of_arts/CIAN_result.txt \
+			  state_of_arts/MSDS-RCNN_result.txt \
+			  state_of_arts/MBNet_result.txt \
+	--evalFig figure.jpg
+```
+![result img](./Doc/figure/figure.jpg)
+
+```
 
 ### Fusion Dead Zone Experiment
 If you want to check the results of the 'FDZ' experiments, you can run the file
