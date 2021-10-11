@@ -138,6 +138,12 @@ If you want to skip the training process, download the pre-trained model and pla
 
 `python eval.py`
 
+
+### Fusion Dead Zone Experiment
+If you want to check the results of the 'FDZ' experiments, you can run the file
+
+`sh FDZ_exp.sh`
+
 ### Evaluation Benchmark
 
 You can evaluate the result files of the models with code.
@@ -148,6 +154,7 @@ For annotations file, only json is supported, and for result files, json and txt
 (multiple `--rstFiles` are supported)
 
 ```bash
+cd ..
 cd evaluation_script
 
 ```bash
@@ -163,11 +170,6 @@ $ python evaluation_script.py \
 ![result img](./Doc/figure/figure.jpg)
 
 ```
-
-### Fusion Dead Zone Experiment
-If you want to check the results of the 'FDZ' experiments, you can run the file
-
-`sh FDZ_exp.sh`
 
 
 ## Acknowledgement
