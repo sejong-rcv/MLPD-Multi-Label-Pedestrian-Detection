@@ -247,3 +247,58 @@ class LoadBox(object):
             res += [bndbox]  # [xmin, ymin, xmax, ymax, label_ind, occ]
             
         return np.array(res, dtype=np.float)  # [[xmin, ymin, xmax, ymax, label_ind], ... ]
+
+
+if __name__ == '__main__':
+    """Debug KAISTPed class"""
+    from matplotlib import patches
+    from matplotlib import pyplot as plt
+    from utils.functional import to_pil_image, unnormalize
+    import config
+
+    def draw_boxes(axes, boxes, labels, target_label, color):
+        for x1, y1, x2, y2 in boxes[labels == target_label]:
+            w, h = x2 - x1 + 1, y2 - y1 + 1
+            axes[0].add_patch(patches.Rectangle((x1, y1), w, h, fill=False, edgecolor=color, lw=1))
+            axes[1].add_patch(patches.Rectangle((x1, y1), w, h, fill=False, edgecolor=color, lw=1))
+
+    args = config.args
+    test = config.test
+
+    fig, axes = plt.subplots(1, 2, figsize=(15, 10))
+
+    dataset = KAISTPed(args, condition='test')
+
+    # HACK(sohwang): KAISTPed always returns empty boxes in test mode
+    dataset.mode = 'train'
+
+    vis, lwir, boxes, labels, indices = dataset[1300]
+
+    vis_mean = dataset.co_transform.transforms[-2].mean
+    vis_std = dataset.co_transform.transforms[-2].std
+
+    lwir_mean = dataset.co_transform.transforms[-1].mean
+    lwir_std = dataset.co_transform.transforms[-1].std
+
+    # C x H x W -> H X W x C
+    vis_np = np.array(to_pil_image(unnormalize(vis, vis_mean, vis_std)))
+    lwir_np = np.array(to_pil_image(unnormalize(lwir, lwir_mean, lwir_std)))
+
+    # Draw images
+    axes[0].imshow(vis_np)
+    axes[1].imshow(lwir_np)
+    axes[0].axis('off')
+    axes[1].axis('off')
+
+    # Draw boxes on images
+    input_h, input_w = test.input_size
+    xyxy_scaler_np = np.array([[input_w, input_h, input_w, input_h]], dtype=np.float32)
+    boxes = boxes * xyxy_scaler_np
+
+    draw_boxes(axes, boxes, labels, 3, 'blue')
+    draw_boxes(axes, boxes, labels, 1, 'red')
+    draw_boxes(axes, boxes, labels, 2, 'green')
+
+    frame_id = dataset.ids[indices.item()]
+    set_id, vid_id, img_id = frame_id[-1]
+    fig.savefig(f'{set_id}_{vid_id}_{img_id}.png')

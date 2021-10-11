@@ -82,7 +82,14 @@ class Compose(object):
         return format_string
 
 class FusionDeadZone(object):
-    
+
+    _FDZ_list = (
+        'original',
+        'blackout_r', 'blackout_t',
+        'sidesblackout_a', 'sidesblackout_b',
+        'surroundingblackout',
+    )
+
     def _blackout_(self, image):
         rr, gg, bb = image.split()
         rr = ImageChops.constant( rr, 0 )
@@ -113,6 +120,9 @@ class FusionDeadZone(object):
 
     def __init__(self, FDZ_case, img_size, interpolation=Image.BILINEAR):        
         
+        assert FDZ_case in self._FDZ_list, \
+            'Unknown FDZ_case. Please choose one among {}'.format(','.join(self.FDZ_list))
+
         self.interpolation = interpolation
         self.FDZ_case=FDZ_case
         
