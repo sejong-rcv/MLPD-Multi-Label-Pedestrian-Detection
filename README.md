@@ -148,11 +148,11 @@ If you want to check the results of the 'FDZ' experiments, you can run the file
 
 ### Evaluation Benchmark
 
-You can evaluate the result files of the models with code.
+You can evaluate the result files of the models with the evaluation script below and draw all the results of state-of-the-art methods in a single figure to make it easy to compare.
 
-We draw all the results of state-of-the-art methods in a single figure to make it easy to compare, and the figure represents the miss-rate against false positives per image.
+The figure represents the miss-rate against false positives per image. Please refer to the paper for more understanding of the metric and figure.
 
-For annotation files, only json is supported, and for result files, json and txt formats are supported.
+Annotation files only support a json format. For results files, json and txt formats are supported.
 (multiple `--rstFiles` are supported)
 
 ```bash
