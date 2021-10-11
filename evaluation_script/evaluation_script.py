@@ -531,8 +531,10 @@ class KAIST(COCO):
                 json.dump(anns, f, indent=4)
             res = super().loadRes(_resFile)
             os.remove(_resFile)
-        else:
+        elif type(resFile) == str and resFile.endswith('.json'):
             res = super().loadRes(resFile)
+        else:
+            raise Exception('[Error] Exception extension : %s \n' % resFile.split('.')[-1]) 
 
         return res
 
@@ -597,7 +599,7 @@ def evaluate(test_annotation_file: str, user_submission_file: str, phase_codenam
 
 
 def draw_all(eval_results, filename='figure.jpg'):
-    """Draw all results in a single figure
+    """Draw all results in a single figure as Miss rate versus false positive per-image (FPPI) curve
 
     Parameters
     ----------
@@ -634,6 +636,8 @@ if __name__ == "__main__":
                         help='Please put the path of the annotation file. Only support json format.')
     parser.add_argument('--rstFiles', type=str, nargs='+', default=['evaluation_script/MLPD_result.json'],
                         help='Please put the path of the result file. Only support json, txt format.')
+    parser.add_argument('--evalFigure', type=str, nargs='+', default='figure.jpg',
+                        help='Please put the output path of the Miss rate versus false positive per-image (FPPI) curve')
     args = parser.parse_args()
 
     phase = "Multispectral"
@@ -641,4 +645,4 @@ if __name__ == "__main__":
 
     # Sort results by MR_all
     results = sorted(results, key=lambda x: x['all'].summarize(0), reverse=True)
-    draw_all(results)
+    draw_all(results, filename=args.evalFigure)
