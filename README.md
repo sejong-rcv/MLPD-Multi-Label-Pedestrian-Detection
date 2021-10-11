@@ -157,7 +157,6 @@ For annotations file, only json is supported, and for result files, json and txt
 cd ..
 cd evaluation_script
 
-```bash
 $ python evaluation_script.py \
 	--annFile KAIST_annotation.json \
 	--rstFile state_of_arts/MLPD_result.txt \
@@ -166,10 +165,11 @@ $ python evaluation_script.py \
 			  state_of_arts/MSDS-RCNN_result.txt \
 			  state_of_arts/MBNet_result.txt \
 	--evalFig figure.jpg
+  
 ```
 ![result img](./Doc/figure/figure.jpg)
 
-```
+
 
 
 ## Acknowledgement
@@ -185,4 +185,3 @@ We appreciate the provider of SSD code [a-PyTorch-Tutorial-to-Object-Detection](
   year = {2021}
 }
 ```
-
