@@ -22,7 +22,7 @@ train.img_set = f"train-all-02.txt"
 
 train.checkpoint = None ## Load chekpoint
 
-train.batch_size = 6 # batch size
+train.batch_size = 12 # batch size
 
 train.start_epoch = 0  # start at this epoch
 train.epochs = 40  # number of epochs to run without early-stopping
