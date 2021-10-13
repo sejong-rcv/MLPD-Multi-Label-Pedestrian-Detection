@@ -132,9 +132,15 @@ If you want to adjust the number of GPUs, add 'CUDA_VISIBLE_DEVIECES'
 (optional) e.g. `CUDA_VISIBLE_DEVIECES=0,1 python train_eval.py`
 
 ### Pretrained Model
-If you want to skip the training process, download the pre-trained model and place it in the directory `src/jobs/`.
+If you want to skip the training process, download the pre-trained model and place it in the directory `pretrained/`.
 
 - [Pretrained Model](https://drive.google.com/file/d/1smXP4xpSDYC8cL_bbT9-E2aywROLlC2v/view?usp=sharing)
+
+Or just run below command
+
+```bash
+$ ./script/download_pretrained_model.sh
+```
 
 ### Inference
 
@@ -143,8 +149,8 @@ Try below command to get inference from pretrained model
 ```bash
 $ cd src
 $ python inference.py --FDZ original --model-path ../pretrained/best_checkpoint.pth.tar
-
 ```
+
 
 ### Evaluation
 
