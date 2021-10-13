@@ -1,18 +1,75 @@
 from tqdm import tqdm
-from typing import Dict
+from typing import Dict, Tuple
 import argparse
 import config
-# import importlib
 import numpy as np
 
 import torch
 import torch.nn as nn
+from torch.utils.data import DataLoader
 
 from datasets import KAISTPed
 from utils.transforms import FusionDeadZone
+from model import SSD300
 
-# TODO(sohwang): why do we need this?
-# args = importlib.import_module('config').args
+
+def val_epoch(model: SSD300, dataloader: DataLoader, input_size: Tuple, min_score: float = 0.05) -> Dict:
+    """Validate the model during an epoch
+
+    Parameters
+    ----------
+    model: SSD300
+        SSD300 model for multispectral pedestrian detection defined by src/model.py
+    dataloader: torch.utils.data.dataloader
+        Dataloader instance to feed training data(images, labels, etc) for KAISTPed dataset
+    input_size: Tuple
+        A tuple of (height, width) for input image to restore bounding box from the raw prediction
+    min_score: float
+        Detection score threshold, i.e. low-confidence detections(< min_score) will be discarded
+
+    Returns
+    -------
+    Dict
+        A Dict of numpy arrays (K x 5: xywh + score) for given image_id key
+    """
+
+    model.eval()
+
+    height, width = input_size
+    xyxy_scaler_np = np.array([[width, height, width, height]], dtype=np.float32)
+
+    device = next(model.parameters()).device
+    results = dict()
+    with torch.no_grad():
+        for i, blob in enumerate(tqdm(dataloader, desc='Evaluating')):
+            image_vis, image_lwir, boxes, labels, indices = blob
+
+            image_vis = image_vis.to(device)
+            image_lwir = image_lwir.to(device)
+
+            # Forward prop.
+            predicted_locs, predicted_scores = model(image_vis, image_lwir)
+
+            # Detect objects in SSD output
+            detections = model.module.detect_objects(predicted_locs, predicted_scores,
+                                                     min_score=min_score, max_overlap=0.425, top_k=200)
+
+            det_boxes_batch, det_labels_batch, det_scores_batch = detections[:3]
+
+            for boxes_t, labels_t, scores_t, image_id in zip(det_boxes_batch, det_labels_batch, det_scores_batch, indices):
+                boxes_np = boxes_t.cpu().numpy().reshape(-1, 4)
+                scores_np = scores_t.cpu().numpy().mean(axis=1).reshape(-1, 1)
+
+                # TODO(sohwang): check if labels are required
+                # labels_np = labels_t.cpu().numpy().reshape(-1, 1)
+
+                xyxy_np = boxes_np * xyxy_scaler_np
+                xywh_np = xyxy_np
+                xywh_np[:, 2] -= xywh_np[:, 0]
+                xywh_np[:, 3] -= xywh_np[:, 1]
+
+                results[image_id.item() + 1] = np.hstack([xywh_np, scores_np])
+    return results
 
 
 def run_inference(model_path: str, fdz_case: str) -> Dict:
@@ -38,11 +95,8 @@ def run_inference(model_path: str, fdz_case: str) -> Dict:
     model = model.to(device)
 
     model = nn.DataParallel(model)
-    model.eval()
 
     input_size = config.test.input_size
-    height, width = input_size
-    xyxy_scaler_np = np.array([[width, height, width, height]], dtype=np.float32)
 
     # Load dataloader for Fusion Dead Zone experiment
     FDZ = [FusionDeadZone(fdz_case, tuple(input_size))]
@@ -58,36 +112,7 @@ def run_inference(model_path: str, fdz_case: str) -> Dict:
                                               pin_memory=True)
     print(test_loader)
 
-    results = dict()
-    with torch.no_grad():
-        for i, blob in enumerate(tqdm(test_loader, desc='Evaluating')):
-            image_vis, image_lwir, boxes, labels, indices = blob
-
-            image_vis = image_vis.to(device)
-            image_lwir = image_lwir.to(device)
-
-            # Forward prop.
-            predicted_locs, predicted_scores = model(image_vis, image_lwir)
-
-            # Detect objects in SSD output
-            detections = model.module.detect_objects(predicted_locs, predicted_scores,
-                                                     min_score=0.05, max_overlap=0.425, top_k=200)
-
-            det_boxes_batch, det_labels_batch, det_scores_batch = detections[:3]
-
-            for boxes_t, labels_t, scores_t, image_id in zip(det_boxes_batch, det_labels_batch, det_scores_batch, indices):
-                boxes_np = boxes_t.cpu().numpy().reshape(-1, 4)
-                scores_np = scores_t.cpu().numpy().mean(axis=1).reshape(-1, 1)
-
-                # TODO(sohwang): check if labels are required
-                # labels_np = labels_t.cpu().numpy().reshape(-1, 1)
-
-                xyxy_np = boxes_np * xyxy_scaler_np
-                xywh_np = xyxy_np
-                xywh_np[:, 2] -= xywh_np[:, 0]
-                xywh_np[:, 3] -= xywh_np[:, 1]
-
-                results[image_id.item() + 1] = np.hstack([xywh_np, scores_np])
+    results = val_epoch(model, test_loader, input_size)
     return results
 
 

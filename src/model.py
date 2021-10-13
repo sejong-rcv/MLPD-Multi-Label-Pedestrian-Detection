@@ -668,8 +668,8 @@ class MultiBoxLoss(nn.Module):
         n_classes = predicted_scores.size(2)
         assert n_priors == predicted_locs.size(1) == predicted_scores.size(1)
 
-        true_locs = torch.zeros((batch_size, n_priors, 4), dtype=torch.float).to(device)
-        true_classes = torch.zeros((batch_size, n_priors), dtype=torch.long).to(device)
+        true_locs = torch.zeros((batch_size, n_priors, 4), dtype=torch.float, device=device)
+        true_classes = torch.zeros((batch_size, n_priors), dtype=torch.long, device=device)
 
         # For each image
         for i in range(batch_size):
@@ -711,7 +711,7 @@ class MultiBoxLoss(nn.Module):
         # LOCALIZATION LOSS
         # Localization loss is computed only over positive (non-background) priors
         if true_locs[positive_priors].shape[0] == 0:
-            loc_loss = 0.
+            loc_loss = torch.tensor([0], device=device)
         else:
             loc_loss = self.smooth_l1(predicted_locs[positive_priors], true_locs[positive_priors])  # (), scalar
 
