@@ -1,8 +1,8 @@
 src/jobs/
 src/datasets
 src/result/
+src/best_checkpoint.pth.tar
 src/__pycache__
 src/utils/__pycache__
-src/best_checkpoint.pth.tar
 evaluation_script/__pycache__
-
+data/kaist-rgbt
