@@ -20,14 +20,8 @@ echo ""
 echo "Downloading dataset to ${dataset_root}"
 echo ""
 
-ggID='1GRz6dX7CVZe_66vkyBGNziC0NFYIjRws'
-ggURL='https://drive.google.com/uc?export=download'
-
-filename="$(curl -sc /tmp/gcache "${ggURL}&id=${ggID}" | grep -o '="uc-name.*</span>' | sed 's/.*">//;s/<.a> .*//')"
-getcode="$(awk '/_warning_/ {print $NF}' /tmp/gcache)"
-
-echo "Filename: ${filename}"
-curl -Lb ${dataset_root} "${ggURL}&confirm=${getcode}&id=${ggID}" -o "${filename}"
+url="https://kaist-cvpr15-dataset.s3.ap-northeast-2.amazonaws.com/kaist-cvpr15.tar.gz"
+wget --directory-prefix=${dataset_root} ${url}
 
 echo ""
 echo "Extract dataset (takes > 10 mins)"
