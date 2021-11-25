@@ -153,7 +153,7 @@ $ python inference.py --FDZ original --model-path ../pretrained/best_checkpoint.
 ++ If you want to visualize the results, try addding the `--vis` argument. Like below
 
 ```bash
-$ python inference.py --FDZ blackout_r --model-path ../pretrained/best_checkpoint.pth.tar --vis
+$ python inference.py --FDZ original --model-path ../pretrained/best_checkpoint.pth.tar --vis
 ```
 Visualization results are stored in 'result/vis'.
 
