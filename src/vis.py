@@ -68,7 +68,7 @@ def detect(original_image, original_lwir, detection, \
     det_boxes = detection[:,1:5]
 
     small_object =  det_boxes[:, 3] < 55
-    # import pdb;pdb.set_trace()
+  
     det_boxes[:,2] = det_boxes[:,0] + det_boxes[:,2]
     det_boxes[:,3] = det_boxes[:,1] + det_boxes[:,3] 
     det_scores = detection[:,5]
@@ -156,19 +156,15 @@ def visualize(result_filename, vis_dir, fdz_case):
 
     input_size = config.test.input_size
     
-    print('!!'*10 + fdz_case + '!!'*10)
     # Load dataloader for Fusion Dead Zone experiment
     FDZ = [FusionDeadZone(config.FDZ_case[fdz_case], tuple(input_size))]
     config.args.test.img_transform = Compose(FDZ)
-    config.args.test.co_transform = Compose([Resize(input_size), \
+    config.args.test.co_transform = Compose([
+                                             Resize(input_size), \
                                              ToTensor()
                                             ])
 
-    args = config.args
-
-    print(args['test'])
-
-    test_dataset = KAISTPed(args, condition="test")
+    test_dataset = KAISTPed(config.args, condition="test")
     test_loader = torch.utils.data.DataLoader(test_dataset,
                                               batch_size=1,
                                               num_workers=args.dataset.workers,
@@ -185,7 +181,12 @@ def visualize(result_filename, vis_dir, fdz_case):
         elif fdz_case=='sidesblackout_b':
             new_images = Image.blend(lwir, vis, 0.5)
         elif fdz_case=='surroundingblackout':
-            new_images = np.array(lwir) + np.array(vis)
+            ## We emptied the center considering the visualization.
+            ## In reality, the original image is used as an input.
+            vv = np.array(vis)
+            vv[y:-y, x:-x] = 0
+            ##
+            new_images = np.array(lwir) + vv
             new_images = Image.fromarray(new_images.astype(np.uint8))
         elif fdz_case in ['blackout_r', 'blackout_t', 'original']:
             new_images = Image.new('RGB',(2*vis.size[0], vis.size[1]))
@@ -193,22 +194,3 @@ def visualize(result_filename, vis_dir, fdz_case):
             new_images.paste(lwir,(vis.size[0],0))
 
         new_images.save('./{}/{:06d}.jpg'.format(vis_dir, idx))
-
-
-if __name__=='__main__':
-    from glob import glob
-    from pathlib import Path
-
-    txt_list = glob('../result/*.txt')[1:]
-    for txt_path in txt_list:
-        print(Path(txt_path).stem)
-        fdz_case = Path(txt_path).stem.split('.')[2].split('_')[:-2]
-        if len(fdz_case) > 1:
-            fdz_case = '_'.join(fdz_case)
-        if isinstance(fdz_case, list):
-            fdz_case = fdz_case[0]
-        vis_dir = f'test/vis_{fdz_case}'
-        os.makedirs(vis_dir, exist_ok=True)
-
-        visualize(txt_path, vis_dir, fdz_case)
-
