@@ -1,3 +1,6 @@
+import os
+from os.path import join as opj
+from pathlib import Path
 from tqdm import tqdm
 from typing import Dict, Tuple
 import argparse
@@ -11,6 +14,8 @@ from torch.utils.data import DataLoader
 from datasets import KAISTPed
 from utils.transforms import FusionDeadZone
 from model import SSD300
+
+from vis import visualize
 
 
 def val_epoch(model: SSD300, dataloader: DataLoader, input_size: Tuple, min_score: float = 0.05) -> Dict:
@@ -99,7 +104,7 @@ def run_inference(model_path: str, fdz_case: str) -> Dict:
     input_size = config.test.input_size
 
     # Load dataloader for Fusion Dead Zone experiment
-    FDZ = [FusionDeadZone(fdz_case, tuple(input_size))]
+    FDZ = [FusionDeadZone(config.FDZ_case[fdz_case], tuple(input_size))]
     config.test.img_transform.add(FDZ)
 
     args = config.args
@@ -110,7 +115,6 @@ def run_inference(model_path: str, fdz_case: str) -> Dict:
                                               num_workers=args.dataset.workers,
                                               collate_fn=test_dataset.collate_fn,
                                               pin_memory=True)
-    print(test_loader)
 
     results = val_epoch(model, test_loader, input_size)
     return results
@@ -150,6 +154,10 @@ if __name__ == '__main__':
                         help='Setting for the "Fusion Dead Zone" experiment. e.g. {}'.format(', '.join(FDZ_list)))
     parser.add_argument('--model-path', required=True, type=str,
                         help='Pretrained model for evaluation.')
+    parser.add_argument('--result-dir', type=str, default='../result',
+                        help='Save result directory')
+    parser.add_argument('--vis', action='store_true', 
+                        help='Save result directory')
     arguments = parser.parse_args()
 
     print(arguments)
@@ -158,10 +166,17 @@ if __name__ == '__main__':
     model_path = arguments.model_path
 
     # Run inference to get detection results
-    result_filename = model_path + f'.{fdz_case}_TEST_det'
+    os.makedirs(arguments.result_dir, exist_ok=True)
+    result_filename = opj(arguments.result_dir,  f'{fdz_case}_{Path(model_path).stem}_TEST_det')
 
     # Run inference
-    results = run_inference(model_path, fdz_case)
+    results = run_inference(arguments.model_path, fdz_case)
 
     # Save results
     save_results(results, result_filename)
+    
+    # Visualization
+    if arguments.vis:
+        vis_dir = opj(arguments.result_dir, 'vis', Path(model_path).stem, fdz_case)
+        os.makedirs(vis_dir, exist_ok=True)
+        visualize(result_filename + '.txt', vis_dir, fdz_case)

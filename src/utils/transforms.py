@@ -120,8 +120,8 @@ class FusionDeadZone(object):
 
     def __init__(self, FDZ_case, img_size, interpolation=Image.BILINEAR):        
         
-        assert FDZ_case in self._FDZ_list, \
-            'Unknown FDZ_case. Please choose one among {}'.format(','.join(self.FDZ_list))
+        # assert FDZ_case in self._FDZ_list, \
+        #     'Unknown FDZ_case. Please choose one among {}'.format(','.join(self.FDZ_list))
 
         self.interpolation = interpolation
         self.FDZ_case=FDZ_case
