@@ -41,11 +41,10 @@ def _line(Draw, xy, dot=0, width=3, fill='#3cb44b', h=False):
 def rectangle(draw, rec, dot=0, width=2, fill='#3cb44b' ):
     rec = np.array(rec, dtype=np.int16)
     a = tuple(rec[0:2])
-    # import pdb;pdb.set_trace()
     b = tuple([rec[2], rec[1]])
     c = tuple([rec[0], rec[3]])
     d = tuple(rec[2:4])
-    # import pdb;pdb.set_trace()
+
     _line(draw, a+b, fill=fill, dot=dot, width=width)
     _line(draw, a+c, fill=fill, dot=dot, width=width)
     _line(draw, c+d, fill=fill, dot=dot, width=width)
@@ -183,6 +182,8 @@ def visualize(result_filename, vis_dir, fdz_case):
         elif fdz_case=='surroundingblackout':
             ## We emptied the center considering the visualization.
             ## In reality, the original image is used as an input.
+            x = 120
+            y = 96
             vv = np.array(vis)
             vv[y:-y, x:-x] = 0
             ##
