@@ -157,17 +157,17 @@ if __name__ == '__main__':
     parser.add_argument('--result-dir', type=str, default='../result',
                         help='Save result directory')
     parser.add_argument('--vis', action='store_true', 
-                        help='Save result directory')
+                        help='Visualizing the results')
     arguments = parser.parse_args()
 
     print(arguments)
 
     fdz_case = arguments.FDZ.lower()
-    model_path = arguments.model_path
+    model_path = Path(model_path).stem.replace('.', '_')
 
     # Run inference to get detection results
     os.makedirs(arguments.result_dir, exist_ok=True)
-    result_filename = opj(arguments.result_dir,  f'{fdz_case}_{Path(model_path).stem}_TEST_det')
+    result_filename = opj(arguments.result_dir,  f'{fdz_case}_{model_path}_TEST_det')
 
     # Run inference
     results = run_inference(arguments.model_path, fdz_case)
@@ -175,8 +175,8 @@ if __name__ == '__main__':
     # Save results
     save_results(results, result_filename)
     
-    # Visualization
+    # Visualizing
     if arguments.vis:
-        vis_dir = opj(arguments.result_dir, 'vis', Path(model_path).stem, fdz_case)
+        vis_dir = opj(arguments.result_dir, 'vis', model_path, fdz_case)
         os.makedirs(vis_dir, exist_ok=True)
         visualize(result_filename + '.txt', vis_dir, fdz_case)
