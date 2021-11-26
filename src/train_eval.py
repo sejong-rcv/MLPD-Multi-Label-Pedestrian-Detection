@@ -117,7 +117,7 @@ def main():
         utils.save_checkpoint(epoch, model.module, optimizer, train_loss, jobs_dir)
         
         if epoch >= 3:
-            result_filename = os.path.join(jobs_dir, f'./Epoch{epoch:03d}_test_det.txt')
+            result_filename = os.path.join(jobs_dir, f'Epoch{epoch:03d}_test_det.txt')
 
             # High min_score setting is important to guarantee reasonable number of detections
             # Otherwise, you might see OOM in validation phase at early training epoch
