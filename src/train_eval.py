@@ -14,6 +14,7 @@ from datasets import KAISTPed
 from inference import val_epoch, save_results
 from model import SSD300, MultiBoxLoss
 from utils import utils
+from utils.evaluation_script import evaluate
 
 torch.backends.cudnn.benchmark = False
 
@@ -122,6 +123,8 @@ def main():
             results = val_epoch(model, test_loader, config.test.input_size, min_score=0.1)
 
             save_results(results, result_filename)
+
+            evaluate(config.PATH.JSON_GT_FILE, result_filename + '.txt', phase) 
 
 
 def train_epoch(model: SSD300,

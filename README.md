@@ -158,11 +158,6 @@ $ python inference.py --FDZ original --model-path ../pretrained/best_checkpoint.
 Visualization results are stored in 'result/vis'.
 
 
-### Evaluation
-
-`python eval.py`
-
-
 ### Fusion Dead Zone Experiment
 If you want to check the results of the 'FDZ' experiments, you can run the file
 

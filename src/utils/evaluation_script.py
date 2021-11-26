@@ -587,12 +587,13 @@ def evaluate(test_annotation_file: str, user_submission_file: str, phase_codenam
     MR_night = eval_result['night'].summarize(0)
 
     recall_all = 1 - eval_result['all'].eval['yy'][0][-1]
-    msg = f'\n########## Method: {method} ##########\n' \
+    title_str = f'\n########## Method: {method} ##########\n'
+    msg = title_str \
         + f'MR_all: {MR_all * 100:.2f}\n' \
         + f'MR_day: {MR_day * 100:.2f}\n' \
         + f'MR_night: {MR_night * 100:.2f}\n' \
         + f'recall_all: {recall_all * 100:.2f}\n' \
-        + '######################################\n\n'
+        + '#'*len(title_str) + '\n\n'
     print(msg)
 
     return eval_result
