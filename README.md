@@ -128,8 +128,8 @@ Please, refer to the following code to train and evaluate the proposed model.
 cd src
 python train_eval.py
 ```
-If you want to adjust the number of GPUs, add 'CUDA_VISIBLE_DEVIECES'
-(optional) e.g. `CUDA_VISIBLE_DEVIECES=0,1 python train_eval.py`
+If you want to adjust the number of GPUs, add 'CUDA_VISIBLE_DEVICES'
+(optional) e.g. `CUDA_VISIBLE_DEVICES=0,1 python train_eval.py`
 
 ### Pretrained Model
 If you want to skip the training process, download the pre-trained model and place it in the directory `pretrained/`.
