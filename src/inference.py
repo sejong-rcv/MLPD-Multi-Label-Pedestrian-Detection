@@ -18,7 +18,7 @@ from model import SSD300
 from vis import visualize
 
 
-def val_epoch(model: SSD300, dataloader: DataLoader, input_size: Tuple, min_score: float = 0.05) -> Dict:
+def val_epoch(model: SSD300, dataloader: DataLoader, input_size: Tuple, min_score: float = 0.1) -> Dict:
     """Validate the model during an epoch
 
     Parameters
@@ -163,7 +163,7 @@ if __name__ == '__main__':
     print(arguments)
 
     fdz_case = arguments.FDZ.lower()
-    model_path = Path(model_path).stem.replace('.', '_')
+    model_path = Path(arguments.model_path).stem.replace('.', '_')
 
     # Run inference to get detection results
     os.makedirs(arguments.result_dir, exist_ok=True)
