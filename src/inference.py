@@ -15,6 +15,8 @@ from datasets import KAISTPed
 from utils.transforms import FusionDeadZone
 from model import SSD300
 
+# from ..evaluation_script.evaluation_script import evaluate
+
 from vis import visualize
 
 
@@ -174,6 +176,10 @@ if __name__ == '__main__':
 
     # Save results
     save_results(results, result_filename)
+
+    # Eval results
+    phase = "Multispectral"
+    # evaluate(config.PATH.JSON_GT_FILE, result_filename + 'txt', phase) 
     
     # Visualizing
     if arguments.vis:

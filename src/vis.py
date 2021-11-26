@@ -84,7 +84,7 @@ def detect(original_image, original_lwir, detection, \
     det_labels = [rev_label_map[l] for l in det_labels]
 
     # PIL from Tensor
-    original_image = torch.permute(original_image.squeeze(), (1, 2, 0))
+    original_image = original_image.squeeze().permute(1, 2, 0)
     original_image = original_image.numpy() * 255
     original_lwir = original_lwir.squeeze().numpy() * 255
     original_image = Image.fromarray(original_image.astype(np.uint8))
@@ -166,7 +166,7 @@ def visualize(result_filename, vis_dir, fdz_case):
     test_dataset = KAISTPed(config.args, condition="test")
     test_loader = torch.utils.data.DataLoader(test_dataset,
                                               batch_size=1,
-                                              num_workers=args.dataset.workers,
+                                              num_workers=config.args.dataset.workers,
                                               collate_fn=test_dataset.collate_fn,
                                               pin_memory=True)
 
