@@ -13,11 +13,12 @@ from torch.utils.data import DataLoader
 
 from datasets import KAISTPed
 from utils.transforms import FusionDeadZone
+from utils.evaluation_script import evaluate
+from vis import visualize
+
 from model import SSD300
 
-# from ..evaluation_script.evaluation_script import evaluate
 
-from vis import visualize
 
 
 def val_epoch(model: SSD300, dataloader: DataLoader, input_size: Tuple, min_score: float = 0.1) -> Dict:
@@ -179,7 +180,7 @@ if __name__ == '__main__':
 
     # Eval results
     phase = "Multispectral"
-    # evaluate(config.PATH.JSON_GT_FILE, result_filename + 'txt', phase) 
+    evaluate(config.PATH.JSON_GT_FILE, result_filename + '.txt', phase) 
     
     # Visualizing
     if arguments.vis:
