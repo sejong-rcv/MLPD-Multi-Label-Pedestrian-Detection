@@ -33,6 +33,7 @@ def main():
     checkpoint = train_conf.checkpoint
     start_epoch = train_conf.start_epoch
     epochs = train_conf.epochs
+    phase = "Multispectral"
 
     # Initialize model or load checkpoint
     if checkpoint is None:
@@ -123,7 +124,7 @@ def main():
             results = val_epoch(model, test_loader, config.test.input_size, min_score=0.1)
 
             save_results(results, result_filename)
-
+            
             evaluate(config.PATH.JSON_GT_FILE, result_filename + '.txt', phase) 
 
 
