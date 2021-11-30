@@ -125,7 +125,7 @@ def main():
 
             save_results(results, result_filename)
             
-            evaluate(config.PATH.JSON_GT_FILE, result_filename + '.txt', phase) 
+            evaluate(config.PATH.JSON_GT_FILE, result_filename, phase) 
 
 
 def train_epoch(model: SSD300,
