@@ -20,8 +20,8 @@ echo ""
 echo "Downloading dataset to ${dataset_root}"
 echo ""
 
-url="https://kaist-cvpr15-dataset.s3.ap-northeast-2.amazonaws.com/kaist-cvpr15.tar.gz"
-wget --directory-prefix=${dataset_root} ${url}
+url="https://onedrive.live.com/download?cid=1570430EADF56512&resid=1570430EADF56512%21109419&authkey=AJcMP-7Yp86PWoE"
+wget --no-check-certificate ${url} -O ${dataset_root}/${filename}
 
 echo ""
 echo "Extract dataset (takes > 10 mins)"
