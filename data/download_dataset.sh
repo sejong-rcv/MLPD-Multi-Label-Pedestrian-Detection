@@ -21,12 +21,12 @@ echo "Downloading dataset to ${dataset_root}"
 echo ""
 
 url="https://onedrive.live.com/download?cid=1570430EADF56512&resid=1570430EADF56512%21109419&authkey=AJcMP-7Yp86PWoE"
-wget --no-check-certificate ${url} -O ${dataset_root}/${filename}
+wget --no-check-certificate ${url} -O ${dataset_root}/kaist-cvpr15.tar.gz
 
 echo ""
 echo "Extract dataset (takes > 10 mins)"
 echo ""
-tar zxvf ${dataset_root}/${filename} >/dev/null 2>&1 && rm ${dataset_root}/${filename}
+tar zxvf ${dataset_root}/kaist-cvpr15.tar.gz >/dev/null 2>&1 && rm ${dataset_root}/kaist-cvpr15.tar.gz
 
 echo ""
 echo "Add a symbolic link"
