@@ -201,7 +201,7 @@ We appreciate the provider of SSD code [a-PyTorch-Tutorial-to-Object-Detection](
 ```
 @INPROCEEDINGS{ IEEE RA-L with IROS2021
   author = {JIWON KIM*, HYEONGJUN KIM*, TAEJOO KIM*, NAMIL KIM, AND YUKYUNG CHOI†},
-  title = {Multi-Label-Pedestrian-Detection},
+  title = {MLPD: Multi-Label Pedestrian Detector in Multispectral Domain},
   booktitle = {IEEE Robotics and Automation Letters (RA-L)},
   year = {2021}
 }
